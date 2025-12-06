@@ -13,10 +13,11 @@
     "db:studio": "pnpm exec drizzle-kit studio"
   },
   "dependencies": {
-    "next": "16.0.7",
     "@neondatabase/serverless": "^1.0.2",
+    "better-auth": "^1.4.5",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
+    "next": "16.0.7",
     "pg": "^8.16.3",
     "react": "19.2.0",
     "react-dom": "19.2.0"

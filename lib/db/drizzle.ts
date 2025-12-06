@@ -27,7 +27,7 @@ if (process.env.NODE_ENV === "production") {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
   db = drizzleNeon(pool, { schema });
 } else {
-  db = drizzlePg(process.env.DATABASE_URL!);
+  db = drizzlePg(process.env.DATABASE_URL!, { schema });
 }
 
 export { db };

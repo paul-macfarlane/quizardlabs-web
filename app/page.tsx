@@ -1,16 +1,24 @@
-import { db } from "@/lib/db/drizzle";
-import { testTable } from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
+import { SignIn } from "@/lib/components/sign-in";
+import { SignOut } from "@/lib/components/sign-out";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const tests = await db.select().from(testTable);
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
   return (
     <div>
-      <h1>Tests</h1>
-
-      <pre>{JSON.stringify(tests, null, 2)}</pre>
+      {session && (
+        <div>
+          <p>Logged in as {session.user.email}</p>
+          <SignOut />
+        </div>
+      )}
+      {!session && <SignIn />}
     </div>
   );
 }
