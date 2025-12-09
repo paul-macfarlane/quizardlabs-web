@@ -1,0 +1,10 @@
+project_name: ""
+statuses: ["To Do", "In Progress", "Done"]
+labels: []
+milestones: []
+date_format: yyyy-mm-dd
+max_column_width: 80
+auto_open_browser: true
+default_port: 6420
+remote_operations: true
+auto_commit: false
