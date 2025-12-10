@@ -164,9 +164,20 @@ export async function myAction(_prevState: any, formData: FormData) {
 ### Service Layer Tests
 
 - Write unit tests for all service layer functions
-- Use Vitest with mocked database
+- Use Vitest with Node.js environment (not jsdom/happy-dom)
 - Test happy paths and error cases
-- No frontend/component testing for MVP
+- **No frontend/component testing for MVP** - Only test backend services
+
+**Dependencies needed:**
+
+- `vitest` - Test runner only
+
+**Do NOT install:**
+
+- `@vitest/ui` - UI for tests (not needed, terminal is fine)
+- `@testing-library/react` - Frontend testing (not needed)
+- `@testing-library/jest-dom` - Frontend testing (not needed)
+- `jsdom` / `happy-dom` - DOM environments (not needed)
 
 ```typescript
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -205,6 +216,25 @@ Available theme variables:
 - Install components only when needed (don't pre-install)
 - Use Lucide React icons (already installed)
 - Follow Shad CN patterns and conventions
+
+### Shared Components
+
+Extract common UI patterns into reusable components for consistency:
+
+```typescript
+// lib/components/navbar.tsx
+interface NavbarProps {
+  userEmail: string;
+}
+
+export function Navbar({ userEmail }: NavbarProps) {
+  return (
+    <nav className="bg-card shadow-sm border-b">
+      {/* Consistent navbar across all dashboards */}
+    </nav>
+  );
+}
+```
 
 ### Icons
 
