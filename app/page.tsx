@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
-import { R2ImageUpload } from "@/lib/components/r2-image-upload";
 import { SignIn } from "@/lib/components/sign-in";
-import { SignOut } from "@/lib/components/sign-out";
+import { getPrimaryUserRole } from "@/lib/services/user";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +12,40 @@ export default async function Home() {
   });
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="container mx-auto max-w-md">
-          <div className="bg-white rounded-lg shadow-md p-8 text-center space-y-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Authentication Required
-            </h1>
-            <p className="text-gray-600">
-              Please sign in to access the R2 image upload demo.
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-8 space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold text-foreground">Quizardlabs</h1>
+            <p className="text-lg text-muted-foreground">
+              Digital tests with teacher-recorded audio
             </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="border-t pt-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                For Teachers
+              </h2>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li>• Create digital tests with questions</li>
+                <li>• Record audio dictation for each question</li>
+                <li>• Upload images and answer choices</li>
+              </ul>
+            </div>
+
+            <div className="border-t pt-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                For Students
+              </h2>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li>• Access tests with audio support</li>
+                <li>• Listen to teacher-recorded audio</li>
+                <li>• Take tests at your own pace</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t pt-6">
             <SignIn />
           </div>
         </div>
@@ -28,22 +53,14 @@ export default async function Home() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Cloudflare R2 Image Upload Demo
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Logged in as {session.user.email}
-            </span>
-            <SignOut />
-          </div>
-        </div>
-        <R2ImageUpload />
-      </div>
-    </div>
-  );
+  const primaryRole = await getPrimaryUserRole(session.user.id);
+  if (!primaryRole) {
+    redirect("/setup");
+  }
+
+  if (primaryRole === "test_maker") {
+    redirect("/maker");
+  } else {
+    redirect("/taker");
+  }
 }

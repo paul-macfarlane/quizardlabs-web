@@ -15,6 +15,13 @@
       "when": 1764916109972,
       "tag": "0001_greedy_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765243416771,
+      "tag": "0002_natural_marvex",
+      "breakpoints": true
     }
   ]
 }

@@ -77,6 +77,7 @@ export const verification = pgTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  roles: many(userRole),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -93,3 +94,26 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 // --- End Auth Schema ---
+
+export const userRole = pgTable(
+  "user_role",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["test_maker", "test_taker"] }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("user_role_userId_idx").on(table.userId),
+    index("user_role_role_idx").on(table.role),
+  ],
+);
+
+export const userRoleRelations = relations(userRole, ({ one }) => ({
+  user: one(user, {
+    fields: [userRole.userId],
+    references: [user.id],
+  }),
+}));
