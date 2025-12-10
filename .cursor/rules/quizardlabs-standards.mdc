@@ -1,0 +1,295 @@
+---
+description: Quizardlabs coding standards and architectural patterns
+alwaysApply: true
+---
+
+# Quizardlabs Coding Standards
+
+## Architecture & File Organization
+
+### Separation of Concerns
+
+- **lib/models/** - Drizzle-inferred types (use InferSelectModel, InferInsertModel)
+- **lib/services/** - Business logic + database queries (testable, framework-agnostic)
+- **lib/actions/** - Next.js Server Actions (thin wrappers with auth + validation)
+- **lib/components/** - UI components (client or server components)
+- **app/** - Next.js pages with Suspense boundaries and streaming
+
+### File Naming Conventions
+
+Keep file names concise, avoid redundancy:
+
+- ✅ `lib/services/user.ts`
+- ✅ `lib/actions/user.ts`
+- ✅ `lib/models/user.ts`
+- ❌ `lib/services/user-service.ts`
+- ❌ `lib/actions/user-actions.ts`
+
+## Database & Types
+
+### Use Drizzle Type Inference
+
+Always use Drizzle's type inference - never duplicate type definitions:
+
+```typescript
+import { user, userRole } from "@/lib/db/schema";
+import { type InferInsertModel, type InferSelectModel } from "drizzle-orm";
+
+export type User = InferSelectModel<typeof user>;
+export type NewUser = InferInsertModel<typeof user>;
+```
+
+### Database Transactions
+
+Use transactions for any function that performs multiple mutations:
+
+```typescript
+export async function setUserRole(userId: string, role: Role) {
+  return await db.transaction(async (tx) => {
+    await tx.delete(userRole).where(eq(userRole.userId, userId));
+    const [created] = await tx.insert(userRole).values(newRole).returning();
+    return created;
+  });
+}
+```
+
+### Schema Organization
+
+- Group related tables together with clear comments
+- Add proper indexes for performance (userId, foreign keys, frequently queried fields)
+- Use proper foreign key constraints with cascade deletes where appropriate
+- Keep relations in same file as table definitions
+
+## Server Actions
+
+### Always Validate Input with Zod
+
+Server actions are endpoints - validate all input:
+
+```typescript
+import { z } from "zod";
+
+const CreateTestSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+});
+
+export async function createTestAction(input: unknown) {
+  try {
+    const validated = CreateTestSchema.parse(input);
+    // ... rest of logic
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: "Invalid input" };
+    }
+    // ... handle other errors
+  }
+}
+```
+
+### Single Source of Truth for Constants
+
+Define constants once, derive types and schemas:
+
+```typescript
+// lib/models/user.ts
+export const ROLES = ["test_maker", "test_taker"] as const;
+export type Role = (typeof ROLES)[number];
+
+// lib/actions/user.ts
+import { ROLES } from "@/lib/models/user";
+const RoleSchema = z.enum(ROLES); // Derives from ROLES constant
+```
+
+### Return Type Pattern
+
+Always return structured responses:
+
+```typescript
+export async function myAction(input: unknown): Promise<{
+  success: boolean;
+  data?: ResultType;
+  error?: string;
+}> {
+  // implementation
+}
+```
+
+### Cache Revalidation
+
+When server actions mutate data, revalidate the cache so server components refetch:
+
+```typescript
+import { revalidatePath } from "next/cache";
+
+export async function updateDataAction(input: unknown) {
+  const validated = schema.parse(input);
+  await updateData(validated);
+
+  // Revalidate specific path
+  revalidatePath("/dashboard");
+
+  // Or revalidate entire layout
+  revalidatePath("/", "layout");
+
+  return { success: true };
+}
+```
+
+### Server Action Redirects
+
+When using `redirect()` in server actions, place it outside the try-catch:
+
+```typescript
+import { redirect } from "next/navigation";
+
+export async function myAction(_prevState: any, formData: FormData) {
+  let data;
+
+  try {
+    // Validation and business logic
+    const parsed = schema.parse(formData);
+    data = await updateData(parsed);
+  } catch (error) {
+    return { success: false, error: "Failed" };
+  }
+
+  // Redirect after try-catch succeeds
+  redirect("/success");
+}
+```
+
+## Testing
+
+### Service Layer Tests
+
+- Write unit tests for all service layer functions
+- Use Vitest with mocked database
+- Test happy paths and error cases
+- No frontend/component testing for MVP
+
+```typescript
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/db/drizzle", () => ({
+  db: { select: vi.fn(), insert: vi.fn(), delete: vi.fn() },
+}));
+```
+
+## UI & Styling
+
+### Use Theme CSS Variables
+
+Never use hardcoded colors - always use theme variables:
+
+```typescript
+// ❌ Bad
+<div className="bg-slate-50 text-gray-900" />
+
+// ✅ Good
+<div className="bg-muted text-foreground" />
+```
+
+Available theme variables:
+
+- `bg-background`, `text-foreground`
+- `bg-card`, `text-card-foreground`
+- `bg-muted`, `text-muted-foreground`
+- `bg-primary`, `text-primary-foreground`
+- `bg-secondary`, `text-secondary-foreground`
+- `bg-accent`, `text-accent-foreground`
+- `border`, `input`, `ring`
+
+### Shad CN & Components
+
+- Install components only when needed (don't pre-install)
+- Use Lucide React icons (already installed)
+- Follow Shad CN patterns and conventions
+
+### Icons
+
+Use Lucide React icons:
+
+```typescript
+import { FileText, ClipboardCheck, Plus, Trash2 } from "lucide-react";
+
+<FileText className="w-6 h-6" />
+```
+
+## Code Style
+
+### Comments
+
+- Code should be self-documenting
+- Only add comments to explain **why**, not **what**
+- Remove unnecessary explanatory comments
+
+```typescript
+// ❌ Bad - unnecessary comment
+// Get the user's primary role
+const role = await getPrimaryUserRole(userId);
+
+// ✅ Good - explains why
+// Using first role as primary for MVP simplicity,
+// will add explicit primary flag in future
+const role = await getPrimaryUserRole(userId);
+```
+
+### Remove Unused Code
+
+- Delete unused functions immediately
+- Don't leave "future use" functions - add them when needed
+- Keep the codebase lean and maintainable
+
+## Next.js Patterns
+
+### Suspense & Streaming
+
+Use Suspense boundaries for async components:
+
+```typescript
+export default async function Page() {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <DataComponent />
+    </Suspense>
+  );
+}
+```
+
+### Server Components by Default
+
+- Use Server Components by default
+- Only use "use client" when needed (interactivity, hooks)
+- Keep client components small and focused
+
+## Project Management
+
+### Task Tracking
+
+- Use backlog.md CLI tool for all task tracking
+- Commands: `backlog board`, `backlog task list`, `backlog browser`
+- Don't create separate tracking markdown files
+
+## Production Readiness
+
+### MVP Philosophy
+
+- Build production-quality code even for MVP
+- Future-proof architecture (e.g., user_roles junction table)
+- Keep simple but allow for easy extension
+- Document known limitations in backlog
+- Service layer combines DB + logic (no over-abstraction for MVP)
+
+### Error Handling
+
+- Validate all inputs
+- Return structured errors
+- Handle edge cases
+- Use try-catch appropriately
+
+### Performance
+
+- Add database indexes for frequently queried fields
+- Use transactions for multiple mutations
+- Optimize queries (select only needed fields)

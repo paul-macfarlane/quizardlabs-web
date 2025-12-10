@@ -1,9 +1,10 @@
 ---
 id: task-1
 title: "Feature 2: User Role Management"
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-12-09"
+updated_date: "2025-12-09"
 labels: []
 dependencies: []
 priority: high
