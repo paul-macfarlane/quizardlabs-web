@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { ModeToggle } from "@/lib/components/mode-toggle";
 import { RoleSelector } from "@/lib/components/role-selector";
 import { getPrimaryUserRole } from "@/lib/services/user";
 import { headers } from "next/headers";
@@ -23,6 +24,9 @@ export default async function SetupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted p-4">
+      <div className="absolute top-4 right-4">
+        <ModeToggle />
+      </div>
       <RoleSelector />
     </div>
   );

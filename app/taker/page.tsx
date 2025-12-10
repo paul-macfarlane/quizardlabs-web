@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { SignOut } from "@/lib/components/sign-out";
+import { Navbar } from "@/lib/components/navbar";
 import { ClipboardCheck } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -14,17 +14,7 @@ export default async function TakerDashboard() {
 
   return (
     <div className="min-h-screen bg-muted">
-      <nav className="bg-card shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-foreground">Quizardlabs</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {session.user.email}
-            </span>
-            <SignOut />
-          </div>
-        </div>
-      </nav>
+      <Navbar userEmail={session.user.email} />
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
