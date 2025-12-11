@@ -64,25 +64,42 @@ export async function setUserRole(userId: string, role: Role) {
 
 ### Always Validate Input with Zod
 
-Server actions are endpoints - validate all input:
+All server actions must:
+
+- Accept `unknown` as input (they are endpoints)
+- Validate with Zod schemas from `lib/models/`
+- Define TypeScript interfaces for return types
+- Return `{ data?, error? }` (no `success` boolean)
 
 ```typescript
-import { z } from "zod";
-
-const CreateTestSchema = z.object({
+// lib/models/test.ts - Define schemas once
+export const CreateTestSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().optional(),
 });
 
-export async function createTestAction(input: unknown) {
+export const TestIdSchema = z.string().min(1);
+
+// lib/actions/test.ts - Import and use schemas
+import { CreateTestSchema, TestIdSchema } from "@/lib/models/test";
+
+export interface CreateTestResult {
+  data?: Test;
+  error?: string;
+}
+
+export async function createTestAction(
+  input: unknown,
+): Promise<CreateTestResult> {
   try {
     const validated = CreateTestSchema.parse(input);
-    // ... rest of logic
+    const test = await createTest(validated);
+    return { data: test };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: "Invalid input" };
+      return { error: "Invalid input" };
     }
-    // ... handle other errors
+    return { error: "Failed to create test" };
   }
 }
 ```
@@ -101,17 +118,16 @@ import { ROLES } from "@/lib/models/user";
 const RoleSchema = z.enum(ROLES); // Derives from ROLES constant
 ```
 
-### Return Type Pattern
+### Authentication Helper
 
-Always return structured responses:
+Use `getCurrentUser()` from user service (don't duplicate):
 
 ```typescript
-export async function myAction(input: unknown): Promise<{
-  success: boolean;
-  data?: ResultType;
-  error?: string;
-}> {
-  // implementation
+import { getCurrentUser } from "@/lib/services/user";
+
+export async function myAction(input: unknown) {
+  const user = await getCurrentUser(); // Throws if not authenticated
+  // ... rest of logic
 }
 ```
 
@@ -161,12 +177,12 @@ export async function myAction(_prevState: any, formData: FormData) {
 
 ## Testing
 
-### Service Layer Tests
+### Testing Strategy
 
-- Write unit tests for all service layer functions
+- Write unit tests for service layer and server actions
 - Use Vitest with Node.js environment (not jsdom/happy-dom)
 - Test happy paths and error cases
-- **No frontend/component testing for MVP** - Only test backend services
+- **No frontend/component testing for MVP** - Only test backend logic
 
 **Dependencies needed:**
 
@@ -179,15 +195,291 @@ export async function myAction(_prevState: any, formData: FormData) {
 - `@testing-library/jest-dom` - Frontend testing (not needed)
 - `jsdom` / `happy-dom` - DOM environments (not needed)
 
+### Service Layer Tests
+
+Mock database and test business logic:
+
 ```typescript
+import { createTest } from "@/lib/services/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db/drizzle", () => ({
   db: { select: vi.fn(), insert: vi.fn(), delete: vi.fn() },
 }));
+
+describe("createTest", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should create a test", async () => {
+    // test implementation
+  });
+});
 ```
 
+### Server Action Tests
+
+Mock service layer and Next.js functions:
+
+```typescript
+import { createTestAction } from "@/lib/actions/test";
+import * as testService from "@/lib/services/test";
+import * as userService from "@/lib/services/user";
+import { revalidatePath } from "next/cache";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock("@/lib/services/user", () => ({
+  getCurrentUser: vi.fn(),
+}));
+
+vi.mock("@/lib/services/test", () => ({
+  createTest: vi.fn(),
+}));
+
+describe("createTestAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(userService.getCurrentUser).mockResolvedValue(mockUser);
+  });
+
+  it("should successfully create a test", async () => {
+    vi.mocked(testService.createTest).mockResolvedValue(mockTest);
+
+    const result = await createTestAction({
+      name: "Math Quiz",
+      description: "A quiz",
+    });
+
+    expect(result).toEqual({ data: mockTest });
+    expect(testService.createTest).toHaveBeenCalledWith({
+      createdBy: "user-1",
+      name: "Math Quiz",
+      description: "A quiz",
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/maker");
+  });
+
+  it("should return error for invalid input", async () => {
+    const result = await createTestAction({ name: "" });
+
+    expect(result).toEqual({ error: "Invalid test data" });
+    expect(testService.createTest).not.toHaveBeenCalled();
+  });
+});
+```
+
+**Testing redirect() in actions:**
+
+```typescript
+import { redirect } from "next/navigation";
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT: ${url}`);
+  }),
+}));
+
+it("should redirect on success", async () => {
+  await expect(myAction({}, formData)).rejects.toThrow(
+    "NEXT_REDIRECT: /success",
+  );
+  expect(redirect).toHaveBeenCalledWith("/success");
+});
+```
+
+**Key Testing Patterns:**
+
+1. **Mock External Dependencies**: Mock service layer, Next.js functions, and auth
+2. **Test Business Logic**: Focus on validation, error handling, success paths
+3. **Mock redirect()**: Make it throw an error to simulate Next.js behavior
+4. **Verify Calls**: Check that services are called with correct parameters
+5. **Test Return Types**: Verify `{ data?, error? }` structure
+6. **Verify Side Effects**: Check `revalidatePath` calls
+
+## Forms
+
+### React Hook Form Integration
+
+Use React Hook Form for all forms with **shared Zod schemas** from models:
+
+```typescript
+// lib/models/test.ts
+export const CreateTestSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255),
+  description: z.string().optional(),
+});
+
+// lib/actions/test.ts
+import { CreateTestSchema } from "@/lib/models/test";
+
+export async function createTestAction(input: unknown) {
+  const validated = CreateTestSchema.parse(input);
+  // ...
+}
+
+// lib/components/test-form.tsx
+import { CreateTestSchema } from "@/lib/models/test";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+type FormData = z.infer<typeof CreateTestSchema>;
+
+export function TestForm() {
+  const form = useForm<FormData>({
+    resolver: zodResolver(CreateTestSchema), // Same schema as action!
+    defaultValues: { name: "", description: "" },
+  });
+
+  const onSubmit = async (data: FormData) => {
+    const result = await createTestAction(data);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Success!");
+      form.reset();
+    }
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <Input
+        {...form.register("name")}
+        aria-invalid={!!form.formState.errors.name}
+      />
+      {form.formState.errors.name && (
+        <p className="text-sm text-destructive">
+          {form.formState.errors.name.message}
+        </p>
+      )}
+      <Button type="submit" disabled={form.formState.isSubmitting}>
+        Submit
+      </Button>
+    </form>
+  );
+}
+```
+
+Benefits:
+
+- Single source of truth for validation
+- Form and action use identical schemas
+- Type-safe throughout
+- Built-in `isSubmitting` state
+
 ## UI & Styling
+
+### Mobile Responsiveness
+
+All pages and components must be mobile-first and responsive:
+
+**Breakpoints:**
+
+- `sm:` 640px (small tablets, landscape phones)
+- `md:` 768px (tablets)
+- `lg:` 1024px (desktops)
+- `xl:` 1280px (large desktops)
+
+**Best Practices:**
+
+```typescript
+// Responsive text sizes
+<h1 className="text-2xl sm:text-3xl lg:text-4xl">
+
+// Responsive spacing
+<div className="p-4 sm:p-6 lg:p-8">
+<div className="space-y-4 sm:space-y-6">
+
+// Responsive grid layouts
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+// Hide elements on mobile
+<span className="hidden md:inline">Email</span>
+
+// Text truncation
+<h2 className="truncate">Long Title</h2>
+<p className="line-clamp-2">Long description...</p>
+
+// Responsive flex direction
+<div className="flex flex-col sm:flex-row gap-4">
+
+// Min-width for text overflow
+<div className="flex-1 min-w-0">
+  <h3 className="truncate">Prevents overflow</h3>
+</div>
+```
+
+**Component Patterns:**
+
+- Navbar: Hide email on mobile, compact buttons
+- Cards: Stack on mobile, grid on larger screens
+- Buttons: Full width on mobile when appropriate
+- Typography: Use `break-words` for long text
+- Icons: Smaller on mobile (w-12 h-12 → sm:w-16 sm:h-16)
+
+### Confirmation Dialogs
+
+Never use native browser `confirm()` or `alert()`. Use Shadcn's `AlertDialog`:
+
+```typescript
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+export function MyComponent() {
+  const [showDialog, setShowDialog] = useState(false);
+
+  const handleAction = async () => {
+    setShowDialog(false);
+    // perform action
+  };
+
+  return (
+    <>
+      <Button onClick={() => setShowDialog(true)}>Delete</Button>
+
+      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAction}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+```
+
+For destructive actions, style the action button with `destructive` colors:
+
+```typescript
+<AlertDialogAction
+  onClick={handleDelete}
+  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+>
+  Delete
+</AlertDialogAction>
+```
 
 ### Use Theme CSS Variables
 
@@ -284,6 +576,30 @@ export default async function Page() {
       <DataComponent />
     </Suspense>
   );
+}
+```
+
+### Dynamic Route Params
+
+Always await and validate params with Zod:
+
+```typescript
+import { TestIdSchema } from "@/lib/models/test";
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: rawId } = await params;
+
+  const parseResult = TestIdSchema.safeParse(rawId);
+  if (!parseResult.success) {
+    notFound();
+  }
+
+  const id = parseResult.data;
+  // ... use validated id
 }
 ```
 

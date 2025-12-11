@@ -1,7 +1,7 @@
 ---
 id: task-2
 title: "Feature 3: Test Creation & Listing"
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-12-09"
 labels: []

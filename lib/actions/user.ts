@@ -1,31 +1,22 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import { ROLES } from "@/lib/models/user";
-import { setUserRole } from "@/lib/services/user";
-import { headers } from "next/headers";
+import { getCurrentUser, setUserRole } from "@/lib/services/user";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-
-async function getCurrentUser() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    throw new Error("Not authenticated");
-  }
-
-  return session.user;
-}
 
 const SetUserRoleSchema = z.object({
   role: z.enum(ROLES),
 });
 
+export interface SetUserRoleResult {
+  error?: string;
+}
+
 export async function setUserRoleAction(
-  _prevState: { success: boolean; error?: string },
+  _prevState: SetUserRoleResult,
   formData: FormData,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<SetUserRoleResult> {
   let validatedRole: "test_maker" | "test_taker";
 
   try {
@@ -37,10 +28,10 @@ export async function setUserRoleAction(
     await setUserRole(user.id, validatedRole);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: "Please select a role" };
+      return { error: "Please select a role" };
     }
+
     return {
-      success: false,
       error: error instanceof Error ? error.message : "Failed to set role",
     };
   }

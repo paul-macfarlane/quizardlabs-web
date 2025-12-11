@@ -13,9 +13,7 @@ import { setUserRoleAction } from "@/lib/actions/user";
 import { useActionState } from "react";
 
 export function RoleSelector() {
-  const [state, formAction, isPending] = useActionState(setUserRoleAction, {
-    success: false,
-  });
+  const [state, formAction, isPending] = useActionState(setUserRoleAction, {});
 
   return (
     <div className="w-full max-w-md mx-auto space-y-6">
@@ -30,7 +28,7 @@ export function RoleSelector() {
 
       <form action={formAction} className="space-y-4">
         <Label htmlFor="test_maker" className="block cursor-pointer">
-          <Card className="transition-all hover:border-primary has-checked-border-primary has-checked-ring-2 has-checked-ring-primary">
+          <Card className="transition-all hover:border-primary has-[input:checked]:border-primary has-[input:checked]:ring-2 has-[input:checked]:ring-primary">
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <input
@@ -59,7 +57,7 @@ export function RoleSelector() {
         </Label>
 
         <Label htmlFor="test_taker" className="block cursor-pointer">
-          <Card className="transition-all hover:border-primary has-checked-border-primary has-checked-ring-2 has-checked-ring-primary">
+          <Card className="transition-all hover:border-primary has-[input:checked]:border-primary has-[input:checked]:ring-2 has-[input:checked]:ring-primary">
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <input
