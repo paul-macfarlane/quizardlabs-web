@@ -78,6 +78,7 @@ export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   roles: many(userRole),
+  testsCreated: many(test),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -114,6 +115,34 @@ export const userRole = pgTable(
 export const userRoleRelations = relations(userRole, ({ one }) => ({
   user: one(user, {
     fields: [userRole.userId],
+    references: [user.id],
+  }),
+}));
+
+export const test = pgTable(
+  "test",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("test_createdBy_idx").on(table.createdBy),
+    index("test_createdAt_idx").on(table.createdAt),
+  ],
+);
+
+export const testRelations = relations(test, ({ one }) => ({
+  creator: one(user, {
+    fields: [test.createdBy],
     references: [user.id],
   }),
 }));

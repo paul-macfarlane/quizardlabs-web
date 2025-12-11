@@ -1,8 +1,10 @@
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/drizzle";
 import { userRole } from "@/lib/db/schema";
 import { type NewUserRole, type Role, type UserRole } from "@/lib/models/user";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { headers } from "next/headers";
 
 export async function getPrimaryUserRole(userId: string): Promise<Role | null> {
   const roles = await db
@@ -32,4 +34,15 @@ export async function setUserRole(
     const [created] = await tx.insert(userRole).values(newRole).returning();
     return created as UserRole;
   });
+}
+
+export async function getCurrentUser() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+
+  return session.user;
 }

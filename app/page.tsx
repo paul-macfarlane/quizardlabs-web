@@ -13,17 +13,19 @@ export default async function Home() {
   if (!session) {
     return (
       <div className="min-h-screen bg-muted flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-8 space-y-6">
+        <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold text-foreground">Quizardlabs</h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+              Quizardlabs
+            </h1>
+            <p className="text-base sm:text-lg text-muted-foreground">
               Digital tests with teacher-recorded audio
             </p>
           </div>
 
           <div className="space-y-4">
-            <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
+            <div className="border-t pt-4 sm:pt-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4">
                 For Teachers
               </h2>
               <ul className="text-sm text-muted-foreground space-y-2">
@@ -33,8 +35,8 @@ export default async function Home() {
               </ul>
             </div>
 
-            <div className="border-t pt-6">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
+            <div className="border-t pt-4 sm:pt-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4">
                 For Students
               </h2>
               <ul className="text-sm text-muted-foreground space-y-2">
@@ -45,7 +47,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="border-t pt-6">
+          <div className="border-t pt-4 sm:pt-6">
             <SignIn />
           </div>
         </div>

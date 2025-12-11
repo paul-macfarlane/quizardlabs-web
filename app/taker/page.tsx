@@ -16,23 +16,25 @@ export default async function TakerDashboard() {
     <div className="min-h-screen bg-muted">
       <Navbar userEmail={session.user.email} />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Student Dashboard
             </h2>
-            <p className="text-muted-foreground">Access your assigned tests</p>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Access your assigned tests
+            </p>
           </div>
 
-          <div className="bg-card rounded-lg shadow-sm border p-8 text-center">
+          <div className="bg-card rounded-lg shadow-sm border p-6 sm:p-8 text-center">
             <div className="text-muted-foreground mb-4">
-              <ClipboardCheck className="w-16 h-16 mx-auto mb-4" />
+              <ClipboardCheck className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
               No tests available
             </h3>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Tests will appear here when your teacher assigns them
             </p>
           </div>
