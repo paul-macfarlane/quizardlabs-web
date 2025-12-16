@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/drizzle";
-import { choice, question } from "@/lib/db/schema";
+import { question } from "@/lib/db/schema";
 import {
   type Choice,
   type NewQuestion,
