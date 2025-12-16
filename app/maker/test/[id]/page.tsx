@@ -6,21 +6,74 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
 import { Navbar } from "@/lib/components/navbar";
+import { QuestionCard } from "@/lib/components/question-card";
+import { QuestionForm } from "@/lib/components/question-form";
 import { TestForm } from "@/lib/components/test-form";
 import { TestIdSchema } from "@/lib/models/test";
+import { getQuestionsForTest } from "@/lib/services/question";
 import { getTest } from "@/lib/services/test";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
 
 interface TestEditorPageProps {
   params: Promise<{ id: string }>;
 }
 
+async function QuestionList({ testId }: { testId: string }) {
+  const questions = await getQuestionsForTest(testId);
+  if (questions.length === 0) {
+    return (
+      <div className="text-center py-8 sm:py-12">
+        <p className="text-sm sm:text-base text-muted-foreground mb-4">
+          No questions yet. Add your first question to get started.
+        </p>
+        <QuestionForm testId={testId} questionCount={0} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <QuestionForm testId={testId} questionCount={questions.length} />
+      </div>
+      <div className="space-y-4">
+        {questions.map((question) => (
+          <QuestionCard
+            key={question.id}
+            question={question}
+            questionCount={questions.length}
+            testId={testId}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuestionListSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  );
+}
+
 export default async function TestEditorPage({ params }: TestEditorPageProps) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) {
+    redirect("/");
+  }
+
   const { id: rawId } = await params;
 
   const parseResult = TestIdSchema.safeParse(rawId);
@@ -29,13 +82,6 @@ export default async function TestEditorPage({ params }: TestEditorPageProps) {
   }
 
   const id = parseResult.data;
-
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    redirect("/");
-  }
 
   const test = await getTest(id);
   if (!test || test.createdBy !== session.user.id) {
@@ -93,15 +139,9 @@ export default async function TestEditorPage({ params }: TestEditorPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 sm:py-12">
-                <p className="text-sm sm:text-base text-muted-foreground mb-4">
-                  No questions yet. Questions will be added in Feature 4.
-                </p>
-                <Button disabled size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Question (Coming Soon)
-                </Button>
-              </div>
+              <Suspense fallback={<QuestionListSkeleton />}>
+                <QuestionList testId={id} />
+              </Suspense>
             </CardContent>
           </Card>
         </div>

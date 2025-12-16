@@ -140,9 +140,65 @@ export const test = pgTable(
   ],
 );
 
-export const testRelations = relations(test, ({ one }) => ({
+export const testRelations = relations(test, ({ one, many }) => ({
   creator: one(user, {
     fields: [test.createdBy],
     references: [user.id],
+  }),
+  questions: many(question),
+}));
+
+export const question = pgTable(
+  "question",
+  {
+    id: text("id").primaryKey(),
+    testId: text("test_id")
+      .notNull()
+      .references(() => test.id, { onDelete: "cascade" }),
+    orderIndex: text("order_index").notNull(),
+    text: text("text").notNull(),
+    type: text("type", {
+      enum: ["multi_choice", "multi_answer", "free_text"],
+    }).notNull(),
+    imageUrl: text("image_url"),
+    audioUrl: text("audio_url"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("question_testId_idx").on(table.testId),
+    index("question_orderIndex_idx").on(table.orderIndex),
+  ],
+);
+
+export const questionRelations = relations(question, ({ one, many }) => ({
+  test: one(test, {
+    fields: [question.testId],
+    references: [test.id],
+  }),
+  choices: many(choice),
+}));
+
+export const choice = pgTable(
+  "choice",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    orderIndex: text("order_index").notNull(),
+    text: text("text").notNull(),
+    audioUrl: text("audio_url"),
+    isCorrect: boolean("is_correct").default(false).notNull(),
+  },
+  (table) => [
+    index("choice_questionId_idx").on(table.questionId),
+    index("choice_orderIndex_idx").on(table.orderIndex),
+  ],
+);
+
+export const choiceRelations = relations(choice, ({ one }) => ({
+  question: one(question, {
+    fields: [choice.questionId],
+    references: [question.id],
   }),
 }));

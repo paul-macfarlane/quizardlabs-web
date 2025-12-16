@@ -3,14 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getPrimaryUserRole, setUserRole } from "../user";
 
-vi.mock("@/lib/db/drizzle", () => ({
-  db: {
-    select: vi.fn(),
-    insert: vi.fn(),
-    delete: vi.fn(),
-    transaction: vi.fn(),
-  },
-}));
+vi.mock("@/lib/db/drizzle", async () => {
+  const { createDbMock } = await import("@/lib/test-utils/db-mocks");
+  return createDbMock();
+});
 
 vi.mock("nanoid", () => ({
   nanoid: () => "test-id-123",

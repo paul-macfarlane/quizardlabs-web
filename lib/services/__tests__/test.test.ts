@@ -10,14 +10,10 @@ import {
 } from "@/lib/services/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/db/drizzle", () => ({
-  db: {
-    select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-}));
+vi.mock("@/lib/db/drizzle", async () => {
+  const { createDbMock } = await import("@/lib/test-utils/db-mocks");
+  return createDbMock();
+});
 
 describe("Test Service", () => {
   beforeEach(() => {
