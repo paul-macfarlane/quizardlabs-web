@@ -54,7 +54,12 @@ export function TestForm({ test, trigger }: TestFormProps) {
         toast.success(test ? "Test updated" : "Test created");
         setOpen(false);
         form.reset();
-        router.refresh();
+
+        if (!test && result.data) {
+          router.push(`/maker/test/${result.data.id}`);
+        } else {
+          router.refresh();
+        }
       }
     } catch (error: unknown) {
       toast.error(
