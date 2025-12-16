@@ -36,6 +36,7 @@ export async function createTestAction(
     });
 
     revalidatePath("/maker");
+    revalidatePath(`/maker/test/${test.id}`);
     return { data: test };
   } catch (error) {
     if (error instanceof z.ZodError) {
