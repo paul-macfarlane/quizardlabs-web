@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ChoiceManager } from "./choice-manager";
 import { QuestionForm } from "./question-form";
 
 interface QuestionCardProps {
@@ -51,21 +52,16 @@ export function QuestionCard({
   const handleDelete = async () => {
     setDeleting(true);
     setShowDeleteDialog(false);
-    try {
-      const result = await deleteQuestionAction(question.id);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Question deleted");
-        router.refresh();
-      }
-    } catch (error: unknown) {
-      toast.error(
-        error instanceof Error ? error.message : "An unexpected error occurred",
-      );
-    } finally {
-      setDeleting(false);
+
+    const result = await deleteQuestionAction(question.id);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Question deleted");
+      router.refresh();
     }
+
+    setDeleting(false);
   };
 
   return (
@@ -119,34 +115,53 @@ export function QuestionCard({
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <p className="text-sm sm:text-base whitespace-pre-wrap">
             {question.text}
           </p>
-          {question.choices && question.choices.length > 0 && (
-            <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Choices:
-              </p>
-              <ul className="space-y-1">
-                {question.choices.map((choice) => (
-                  <li
-                    key={choice.id}
-                    className={`text-sm px-3 py-2 rounded ${
-                      choice.isCorrect
-                        ? "bg-green-50 dark:bg-green-950/20 text-green-900 dark:text-green-100"
-                        : "bg-muted"
-                    }`}
-                  >
-                    {choice.text}
-                    {choice.isCorrect && (
-                      <span className="ml-2 text-xs font-medium">
-                        (Correct)
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+
+          {(question.type === "multi_choice" ||
+            question.type === "multi_answer") && (
+            <div className="space-y-3">
+              {question.choices && question.choices.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Choices:
+                  </p>
+                  <ul className="space-y-1">
+                    {question.choices.map((choice) => (
+                      <li
+                        key={choice.id}
+                        className={`text-sm px-3 py-2 rounded ${
+                          choice.isCorrect
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : "bg-muted"
+                        }`}
+                      >
+                        {choice.text}
+                        {choice.isCorrect && (
+                          <span className="ml-2 text-xs font-medium">
+                            ✓ Correct
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <details className="border-t pt-3">
+                <summary className="cursor-pointer text-sm font-medium text-primary hover:underline">
+                  Manage choices
+                </summary>
+                <div className="pt-4">
+                  <ChoiceManager
+                    questionId={question.id}
+                    questionType={question.type}
+                    choices={question.choices || []}
+                  />
+                </div>
+              </details>
             </div>
           )}
         </CardContent>

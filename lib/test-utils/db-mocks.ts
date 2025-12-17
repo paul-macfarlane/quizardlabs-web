@@ -31,6 +31,13 @@ export const createDbMock = () => ({
             returning: vi.fn(),
           })),
         })),
+        update: vi.fn(() => ({
+          set: vi.fn(() => ({
+            where: vi.fn(() => ({
+              returning: vi.fn(),
+            })),
+          })),
+        })),
         delete: vi.fn(() => ({
           where: vi.fn(),
         })),
@@ -39,8 +46,12 @@ export const createDbMock = () => ({
     query: {
       question: {
         findFirst: vi.fn(),
+        findMany: vi.fn(),
       },
       test: {
+        findFirst: vi.fn(),
+      },
+      choice: {
         findFirst: vi.fn(),
       },
     },

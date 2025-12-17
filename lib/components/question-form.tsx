@@ -65,23 +65,17 @@ export function QuestionForm({
   });
 
   const onSubmit = async (data: QuestionFormData) => {
-    try {
-      const result = question
-        ? await updateQuestionAction({ id: question.id, ...data })
-        : await addQuestionAction(data);
+    const result = question
+      ? await updateQuestionAction({ id: question.id, ...data })
+      : await addQuestionAction(data);
 
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success(question ? "Question updated" : "Question added");
-        setOpen(false);
-        form.reset();
-        router.refresh();
-      }
-    } catch (error: unknown) {
-      toast.error(
-        error instanceof Error ? error.message : "An unexpected error occurred",
-      );
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(question ? "Question updated" : "Question added");
+      setOpen(false);
+      form.reset();
+      router.refresh();
     }
   };
 
