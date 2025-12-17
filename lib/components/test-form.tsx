@@ -43,28 +43,22 @@ export function TestForm({ test, trigger }: TestFormProps) {
   });
 
   const onSubmit = async (data: TestFormData) => {
-    try {
-      const result = test
-        ? await updateTestAction({ id: test.id, ...data })
-        : await createTestAction(data);
+    const result = test
+      ? await updateTestAction({ id: test.id, ...data })
+      : await createTestAction(data);
 
-      if (result.error) {
-        toast.error(result.error);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(test ? "Test updated" : "Test created");
+      setOpen(false);
+      form.reset();
+
+      if (!test && result.data) {
+        router.push(`/maker/test/${result.data.id}`);
       } else {
-        toast.success(test ? "Test updated" : "Test created");
-        setOpen(false);
-        form.reset();
-
-        if (!test && result.data) {
-          router.push(`/maker/test/${result.data.id}`);
-        } else {
-          router.refresh();
-        }
+        router.refresh();
       }
-    } catch (error: unknown) {
-      toast.error(
-        error instanceof Error ? error.message : "An unexpected error occurred",
-      );
     }
   };
 

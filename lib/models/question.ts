@@ -45,3 +45,13 @@ export const UpdateChoiceSchema = z.object({
 });
 
 export const ChoiceIdSchema = z.string().min(1, "Choice ID is required");
+
+export const ReorderChoicesSchema = z.object({
+  questionId: z.string().min(1, "Question ID is required"),
+  updates: z.array(
+    z.object({
+      id: z.string().min(1, "Choice ID is required"),
+      orderIndex: z.string().min(1, "Order index is required"),
+    }),
+  ),
+});

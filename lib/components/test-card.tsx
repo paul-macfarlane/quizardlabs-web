@@ -45,21 +45,16 @@ export function TestCard({ test }: TestCardProps) {
   const handleDelete = async () => {
     setDeleting(true);
     setShowDeleteDialog(false);
-    try {
-      const result = await deleteTestAction(test.id);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Test deleted");
-        router.refresh();
-      }
-    } catch (error: unknown) {
-      toast.error(
-        error instanceof Error ? error.message : "An unexpected error occurred",
-      );
-    } finally {
-      setDeleting(false);
+
+    const result = await deleteTestAction(test.id);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Test deleted");
+      router.refresh();
     }
+
+    setDeleting(false);
   };
 
   return (

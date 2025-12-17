@@ -1,8 +1,11 @@
 import {
+  addChoice,
   addQuestion,
+  deleteChoice,
   deleteQuestion,
   getQuestionWithChoices,
   getQuestionsForTest,
+  updateChoice,
   updateQuestion,
 } from "@/lib/services/question";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,20 +37,16 @@ describe("getQuestionsForTest", () => {
         imageUrl: null,
         audioUrl: null,
         createdAt: new Date(),
+        choices: [],
       },
     ];
 
-    const mockOrderBy = vi.fn().mockResolvedValue(mockQuestions);
-    const mockWhere = vi.fn(() => ({ orderBy: mockOrderBy }));
-    const mockFrom = vi.fn(() => ({ where: mockWhere }));
-    vi.mocked(db.select).mockReturnValue({
-      from: mockFrom,
-    } as unknown as ReturnType<typeof db.select>);
+    vi.mocked(db.query.question.findMany).mockResolvedValue(mockQuestions);
 
     const result = await getQuestionsForTest("test-1");
 
     expect(result).toEqual(mockQuestions);
-    expect(db.select).toHaveBeenCalled();
+    expect(db.query.question.findMany).toHaveBeenCalled();
   });
 });
 
@@ -209,5 +208,109 @@ describe("getQuestionWithChoices", () => {
     const result = await getQuestionWithChoices("q1");
 
     expect(result).toBeNull();
+  });
+});
+
+describe("addChoice", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should add a new choice", async () => {
+    const newChoice = {
+      questionId: "q1",
+      orderIndex: "0",
+      text: "Choice 1",
+      isCorrect: true,
+    };
+
+    const mockChoice = {
+      id: "test-id",
+      ...newChoice,
+      audioUrl: null,
+    };
+
+    const mockReturning = vi.fn().mockResolvedValue([mockChoice]);
+    const mockValues = vi.fn(() => ({ returning: mockReturning }));
+    vi.mocked(db.insert).mockReturnValue({
+      values: mockValues,
+    } as unknown as ReturnType<typeof db.insert>);
+
+    const result = await addChoice(newChoice);
+
+    expect(result).toEqual(mockChoice);
+    expect(db.insert).toHaveBeenCalled();
+  });
+});
+
+describe("updateChoice", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should update a choice", async () => {
+    const updatedData = { text: "Updated Choice" };
+    const mockChoice = {
+      id: "c1",
+      questionId: "q1",
+      orderIndex: "0",
+      text: "Updated Choice",
+      audioUrl: null,
+      isCorrect: false,
+    };
+
+    const mockReturning = vi.fn().mockResolvedValue([mockChoice]);
+    const mockWhere = vi.fn(() => ({ returning: mockReturning }));
+    const mockSet = vi.fn(() => ({ where: mockWhere }));
+    vi.mocked(db.update).mockReturnValue({
+      set: mockSet,
+    } as unknown as ReturnType<typeof db.update>);
+
+    const result = await updateChoice("c1", updatedData);
+
+    expect(result).toEqual(mockChoice);
+    expect(db.update).toHaveBeenCalled();
+  });
+
+  it("should return null if choice not found", async () => {
+    const mockReturning = vi.fn().mockResolvedValue([]);
+    const mockWhere = vi.fn(() => ({ returning: mockReturning }));
+    const mockSet = vi.fn(() => ({ where: mockWhere }));
+    vi.mocked(db.update).mockReturnValue({
+      set: mockSet,
+    } as unknown as ReturnType<typeof db.update>);
+
+    const result = await updateChoice("c1", { text: "Updated" });
+
+    expect(result).toBeNull();
+  });
+});
+
+describe("deleteChoice", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should delete a choice", async () => {
+    const mockWhere = vi.fn().mockResolvedValue({ rowCount: 1 });
+    vi.mocked(db.delete).mockReturnValue({
+      where: mockWhere,
+    } as unknown as ReturnType<typeof db.delete>);
+
+    const result = await deleteChoice("c1");
+
+    expect(result).toBe(true);
+    expect(db.delete).toHaveBeenCalled();
+  });
+
+  it("should return false if choice not found", async () => {
+    const mockWhere = vi.fn().mockResolvedValue({ rowCount: 0 });
+    vi.mocked(db.delete).mockReturnValue({
+      where: mockWhere,
+    } as unknown as ReturnType<typeof db.delete>);
+
+    const result = await deleteChoice("c1");
+
+    expect(result).toBe(false);
   });
 });
