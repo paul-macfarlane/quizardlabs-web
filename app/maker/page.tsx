@@ -66,7 +66,7 @@ export default async function MakerDashboard() {
     <div className="min-h-screen bg-muted">
       <Navbar userEmail={session.user.email} />
 
-      <main className="container mx-auto px-4 py-6 sm:py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
         <div className="max-w-6xl mx-auto">
           <div className="mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
