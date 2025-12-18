@@ -15,7 +15,7 @@ import { TestForm } from "@/lib/components/test-form";
 import { TestIdSchema } from "@/lib/models/test";
 import { getQuestionsForTest } from "@/lib/services/question";
 import { getTest } from "@/lib/services/test";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -29,21 +29,37 @@ async function QuestionList({ testId }: { testId: string }) {
   const questions = await getQuestionsForTest(testId);
   if (questions.length === 0) {
     return (
-      <div className="text-center py-8 sm:py-12">
-        <p className="text-sm sm:text-base text-muted-foreground mb-4">
-          No questions yet. Add your first question to get started.
-        </p>
-        <QuestionForm testId={testId} questionCount={0} />
-      </div>
+      <>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-sm sm:text-base text-muted-foreground">
+            No questions yet. Add your first question to get started.
+          </p>
+        </div>
+
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+          <QuestionForm
+            testId={testId}
+            questionCount={0}
+            trigger={
+              <Button
+                size="lg"
+                className="rounded-full shadow-lg hover:shadow-xl transition-shadow gap-2 h-12 px-4 sm:h-14 sm:px-6"
+              >
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-medium text-sm sm:text-base">
+                  Add Question
+                </span>
+              </Button>
+            }
+          />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <QuestionForm testId={testId} questionCount={questions.length} />
-      </div>
-      <div className="space-y-4">
+    <>
+      <div className="space-y-4 pb-24">
         {questions.map((question, index) => (
           <QuestionCard
             key={question.id}
@@ -54,7 +70,25 @@ async function QuestionList({ testId }: { testId: string }) {
           />
         ))}
       </div>
-    </div>
+
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+        <QuestionForm
+          testId={testId}
+          questionCount={questions.length}
+          trigger={
+            <Button
+              size="lg"
+              className="rounded-full shadow-lg hover:shadow-xl transition-shadow gap-2 h-12 px-4 sm:h-14 sm:px-6"
+            >
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">
+                Add Question
+              </span>
+            </Button>
+          }
+        />
+      </div>
+    </>
   );
 }
 
