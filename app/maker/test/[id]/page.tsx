@@ -127,7 +127,7 @@ export default async function TestEditorPage({ params }: TestEditorPageProps) {
     <div className="min-h-screen bg-muted">
       <Navbar userEmail={session.user.email} />
 
-      <main className="container mx-auto px-4 py-6 sm:py-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4 sm:mb-6">
             <Link href="/maker">
