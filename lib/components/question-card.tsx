@@ -16,7 +16,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -36,12 +35,14 @@ import { QuestionForm } from "./question-form";
 
 interface QuestionCardProps {
   question: Question & { choices?: Choice[] };
+  questionNumber: number;
   questionCount: number;
   testId: string;
 }
 
 export function QuestionCard({
   question,
+  questionNumber,
   questionCount,
   testId,
 }: QuestionCardProps) {
@@ -67,18 +68,20 @@ export function QuestionCard({
   return (
     <>
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-1">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-base sm:text-lg">
-                Question {parseInt(question.orderIndex) + 1}
-              </CardTitle>
-              <CardDescription className="mt-1">
-                {question.type
-                  .split("_")
-                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(" ")}
-              </CardDescription>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  Q{questionNumber}
+                </span>
+                <CardDescription className="text-xs sm:text-sm">
+                  {question.type
+                    .split("_")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ")}
+                </CardDescription>
+              </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -116,7 +119,7 @@ export function QuestionCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm sm:text-base whitespace-pre-wrap">
+          <p className="text-base sm:text-lg font-semibold whitespace-pre-wrap">
             {question.text}
           </p>
 
