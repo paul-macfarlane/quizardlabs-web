@@ -14,6 +14,17 @@ export const QUESTION_TYPES = [
   "free_text",
 ] as const;
 
+export type QuestionType = (typeof QUESTION_TYPES)[number];
+
+export function getQuestionTypeDisplayName(type: QuestionType): string {
+  const displayNames: Record<QuestionType, string> = {
+    multi_choice: "Multiple Choice",
+    multi_answer: "Multiple Answer",
+    free_text: "Free Text",
+  };
+  return displayNames[type];
+}
+
 export const AddQuestionSchema = z.object({
   testId: z.string().min(1, "Test ID is required"),
   text: z.string().min(1, "Question text is required"),

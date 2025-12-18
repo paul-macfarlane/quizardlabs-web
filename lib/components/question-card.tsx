@@ -24,7 +24,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { deleteQuestionAction } from "@/lib/actions/question";
-import { type Choice, type Question } from "@/lib/models/question";
+import {
+  type Choice,
+  type Question,
+  getQuestionTypeDisplayName,
+} from "@/lib/models/question";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -76,10 +80,7 @@ export function QuestionCard({
                   Q{questionNumber}
                 </span>
                 <CardDescription className="text-xs sm:text-sm">
-                  {question.type
-                    .split("_")
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(" ")}
+                  {getQuestionTypeDisplayName(question.type)}
                 </CardDescription>
               </div>
             </div>
