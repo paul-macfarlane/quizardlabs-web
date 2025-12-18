@@ -21,6 +21,7 @@ import {
   AddQuestionSchema,
   QUESTION_TYPES,
   type Question,
+  getQuestionTypeDisplayName,
 } from "@/lib/models/question";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -144,13 +145,7 @@ export function QuestionForm({
                       htmlFor={type}
                       className="font-normal cursor-pointer"
                     >
-                      {type
-                        .split("_")
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() + word.slice(1),
-                        )
-                        .join(" ")}
+                      {getQuestionTypeDisplayName(type)}
                     </Label>
                   </div>
                 ))}
