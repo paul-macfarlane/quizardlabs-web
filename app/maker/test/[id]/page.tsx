@@ -44,10 +44,11 @@ async function QuestionList({ testId }: { testId: string }) {
         <QuestionForm testId={testId} questionCount={questions.length} />
       </div>
       <div className="space-y-4">
-        {questions.map((question) => (
+        {questions.map((question, index) => (
           <QuestionCard
             key={question.id}
             question={question}
+            questionNumber={index + 1}
             questionCount={questions.length}
             testId={testId}
           />
