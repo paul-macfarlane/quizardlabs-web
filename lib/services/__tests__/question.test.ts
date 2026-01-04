@@ -19,6 +19,10 @@ vi.mock("nanoid", () => ({
   nanoid: vi.fn(() => "test-id"),
 }));
 
+vi.mock("@/lib/services/media", () => ({
+  signMediaUrl: vi.fn().mockResolvedValue(null),
+}));
+
 const { db } = await import("@/lib/db/drizzle");
 
 describe("getQuestionsForTest", () => {
@@ -41,11 +45,19 @@ describe("getQuestionsForTest", () => {
       },
     ];
 
+    const expectedQuestions = [
+      {
+        ...mockQuestions[0],
+        imageSignedUrl: null,
+        audioSignedUrl: null,
+      },
+    ];
+
     vi.mocked(db.query.question.findMany).mockResolvedValue(mockQuestions);
 
     const result = await getQuestionsForTest("test-1");
 
-    expect(result).toEqual(mockQuestions);
+    expect(result).toEqual(expectedQuestions);
     expect(db.query.question.findMany).toHaveBeenCalled();
   });
 });
@@ -185,13 +197,25 @@ describe("getQuestionWithChoices", () => {
       ],
     };
 
+    const expectedQuestionWithChoices = {
+      ...mockQuestionWithChoices,
+      imageSignedUrl: null,
+      audioSignedUrl: null,
+      choices: [
+        {
+          ...mockQuestionWithChoices.choices[0],
+          audioSignedUrl: null,
+        },
+      ],
+    };
+
     vi.mocked(db.query.question.findFirst).mockResolvedValue(
       mockQuestionWithChoices,
     );
 
     const result = await getQuestionWithChoices("q1");
 
-    expect(result).toEqual(mockQuestionWithChoices);
+    expect(result).toEqual(expectedQuestionWithChoices);
     expect(db.query.question.findFirst).toHaveBeenCalledWith({
       where: expect.any(Object),
       with: {

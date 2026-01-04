@@ -6,12 +6,46 @@ import {
   type NewQuestion,
   type Question,
 } from "@/lib/models/question";
+import { signMediaUrl } from "@/lib/services/media";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+export type QuestionWithSignedUrls = Question & {
+  imageSignedUrl: string | null;
+  audioSignedUrl: string | null;
+};
+
+export type ChoiceWithSignedUrls = Choice & {
+  audioSignedUrl: string | null;
+};
+
+export type QuestionWithChoicesAndSignedUrls = QuestionWithSignedUrls & {
+  choices: ChoiceWithSignedUrls[];
+};
+
+async function signQuestionMediaUrls<T extends Question & { choices: Choice[] }>(
+  q: T,
+): Promise<T & { imageSignedUrl: string | null; audioSignedUrl: string | null; choices: (Choice & { audioSignedUrl: string | null })[] }> {
+  const [imageSignedUrl, audioSignedUrl, ...choiceAudioSignedUrls] = await Promise.all([
+    signMediaUrl(q.imageUrl),
+    signMediaUrl(q.audioUrl),
+    ...q.choices.map((c) => signMediaUrl(c.audioUrl)),
+  ]);
+
+  return {
+    ...q,
+    imageSignedUrl,
+    audioSignedUrl,
+    choices: q.choices.map((c, i) => ({
+      ...c,
+      audioSignedUrl: choiceAudioSignedUrls[i],
+    })),
+  };
+}
+
 export async function getQuestionsForTest(
   testId: string,
-): Promise<(Question & { choices: Choice[] })[]> {
+): Promise<QuestionWithChoicesAndSignedUrls[]> {
   const results = await db.query.question.findMany({
     where: eq(question.testId, testId),
     orderBy: (questions, { asc }) => [asc(questions.orderIndex)],
@@ -21,7 +55,7 @@ export async function getQuestionsForTest(
       },
     },
   });
-  return results;
+  return Promise.all(results.map(signQuestionMediaUrls));
 }
 
 export async function addQuestion(
@@ -54,7 +88,7 @@ export async function deleteQuestion(id: string): Promise<boolean> {
 
 export async function getQuestionWithChoices(
   questionId: string,
-): Promise<(Question & { choices: Choice[] }) | null> {
+): Promise<QuestionWithChoicesAndSignedUrls | null> {
   const result = await db.query.question.findFirst({
     where: eq(question.id, questionId),
     with: {
@@ -64,7 +98,8 @@ export async function getQuestionWithChoices(
     },
   });
 
-  return result || null;
+  if (!result) return null;
+  return signQuestionMediaUrls(result);
 }
 
 export async function addChoice(data: Omit<NewChoice, "id">): Promise<Choice> {

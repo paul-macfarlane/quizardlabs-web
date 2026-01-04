@@ -23,22 +23,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { deleteQuestionAction } from "@/lib/actions/question";
 import {
-  type Choice,
-  type Question,
-  getQuestionTypeDisplayName,
-} from "@/lib/models/question";
+  deleteQuestionAction,
+  updateQuestionAction,
+} from "@/lib/actions/question";
+import { getQuestionTypeDisplayName } from "@/lib/models/question";
+import type {
+  ChoiceWithSignedUrls,
+  QuestionWithSignedUrls,
+} from "@/lib/services/question";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { AudioRecorder } from "./audio-recorder";
 import { ChoiceManager } from "./choice-manager";
+import { ImageUploader } from "./image-uploader";
 import { QuestionForm } from "./question-form";
+import { QuestionMediaDisplay } from "./question-media-display";
 
 interface QuestionCardProps {
-  question: Question & { choices?: Choice[] };
+  question: QuestionWithSignedUrls & { choices?: ChoiceWithSignedUrls[] };
   questionNumber: number;
   questionCount: number;
   testId: string;
@@ -67,6 +73,54 @@ export function QuestionCard({
     }
 
     setDeleting(false);
+  };
+
+  const handleImageUpload = async (key: string) => {
+    const result = await updateQuestionAction({
+      id: question.id,
+      imageUrl: key,
+    });
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      router.refresh();
+    }
+  };
+
+  const handleImageRemove = async () => {
+    const result = await updateQuestionAction({
+      id: question.id,
+      imageUrl: null,
+    });
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      router.refresh();
+    }
+  };
+
+  const handleAudioUpload = async (key: string) => {
+    const result = await updateQuestionAction({
+      id: question.id,
+      audioUrl: key,
+    });
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      router.refresh();
+    }
+  };
+
+  const handleAudioRemove = async () => {
+    const result = await updateQuestionAction({
+      id: question.id,
+      audioUrl: null,
+    });
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      router.refresh();
+    }
   };
 
   return (
@@ -124,6 +178,11 @@ export function QuestionCard({
             {question.text}
           </p>
 
+          <QuestionMediaDisplay
+            imageSignedUrl={question.imageSignedUrl}
+            audioSignedUrl={question.audioSignedUrl}
+          />
+
           {(question.type === "multi_choice" ||
             question.type === "multi_answer") && (
             <div className="space-y-3">
@@ -163,11 +222,45 @@ export function QuestionCard({
                     questionId={question.id}
                     questionType={question.type}
                     choices={question.choices || []}
+                    testId={testId}
                   />
                 </div>
               </details>
             </div>
           )}
+
+          <details className="border-t pt-3">
+            <summary className="cursor-pointer text-sm font-medium text-primary hover:underline">
+              Manage media
+            </summary>
+            <div className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Question Image
+                </p>
+                <ImageUploader
+                  testId={testId}
+                  questionId={question.id}
+                  currentImageSignedUrl={question.imageSignedUrl}
+                  onUpload={handleImageUpload}
+                  onRemove={handleImageRemove}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Question Audio
+                </p>
+                <AudioRecorder
+                  type="question_audio"
+                  testId={testId}
+                  questionId={question.id}
+                  currentAudioSignedUrl={question.audioSignedUrl}
+                  onUpload={handleAudioUpload}
+                  onRemove={handleAudioRemove}
+                />
+              </div>
+            </div>
+          </details>
         </CardContent>
       </Card>
 

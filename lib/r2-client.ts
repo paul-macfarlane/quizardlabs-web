@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -43,6 +44,15 @@ export async function generateDownloadUrl(key: string, expiresIn: number) {
 
 export async function getObject(key: string) {
   const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+  });
+
+  return await r2Client.send(command);
+}
+
+export async function deleteObject(key: string) {
+  const command = new DeleteObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key,
   });

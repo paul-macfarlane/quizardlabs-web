@@ -37,6 +37,8 @@ export const UpdateQuestionSchema = z.object({
   text: z.string().min(1, "Question text is required").optional(),
   type: z.enum(QUESTION_TYPES).optional(),
   orderIndex: z.string().min(1, "Order index is required").optional(),
+  imageUrl: z.string().nullable().optional(),
+  audioUrl: z.string().nullable().optional(),
 });
 
 export const QuestionIdSchema = z.string().min(1, "Question ID is required");
@@ -53,6 +55,7 @@ export const UpdateChoiceSchema = z.object({
   text: z.string().min(1, "Choice text is required").optional(),
   orderIndex: z.string().min(1, "Order index is required").optional(),
   isCorrect: z.boolean().optional(),
+  audioUrl: z.string().nullable().optional(),
 });
 
 export const ChoiceIdSchema = z.string().min(1, "Choice ID is required");
