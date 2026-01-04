@@ -153,6 +153,27 @@
 
 **Goal**: Teachers can upload images and record/upload audio for questions and choices.
 
+### Implementation Details
+
+Questions on tests can have image as well as audio. Choices can also have audio.
+
+**Permissions**
+
+- Test makers need permissions to upload media AND associate it with tests they can manage.
+- Test makers need permissions to read media IF it is for a test they have access to.
+
+If the entire bucket is made private the application can control access by signing urls for clients. The authorization question is not “can the user access this asset?” but rather “can they access the question/choice it is for?”.
+
+Assets URLs are stored at the question and/or choice levels, so there will need to be a retrieval of the test and checking the permissions of the user related to the test.
+
+Upload URL formats
+
+- Question Image:`/tests/{test_id}/questions/{question_id}/images/{uuid}`
+- Question Audio: `/tests/{test_id}/questions/{question_id}/audio/{uuid}
+- Choice Audio: `/tests/{test_id}/questions/{question_id}/choices/{choice_id}/audio/{uuid}`
+
+When updating an existing asset, the old asset should be removed.
+
 ### Service Layer:
 
 - `lib/services/media-service.ts`:

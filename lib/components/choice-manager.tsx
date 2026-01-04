@@ -10,22 +10,27 @@ import {
   reorderChoicesAction,
   updateChoiceAction,
 } from "@/lib/actions/question";
-import type { Choice } from "@/lib/models/question";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import type { ChoiceWithSignedUrls } from "@/lib/services/question";
+import { ArrowDown, ArrowUp, Mic, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { AudioRecorder } from "./audio-recorder";
+import { ChoiceAudioDisplay } from "./choice-audio-display";
+
 interface ChoiceManagerProps {
   questionId: string;
   questionType: "multi_choice" | "multi_answer" | "free_text";
-  choices: Choice[];
+  choices: ChoiceWithSignedUrls[];
+  testId: string;
 }
 
 export function ChoiceManager({
   questionId,
   questionType,
   choices,
+  testId,
 }: ChoiceManagerProps) {
   const router = useRouter();
   const [newChoiceText, setNewChoiceText] = useState("");
@@ -59,7 +64,7 @@ export function ChoiceManager({
     setIsAdding(false);
   };
 
-  const handleToggleCorrect = async (choice: Choice) => {
+  const handleToggleCorrect = async (choice: ChoiceWithSignedUrls) => {
     const newIsCorrect = !choice.isCorrect;
 
     if (questionType === "multi_choice" && newIsCorrect) {
@@ -93,7 +98,7 @@ export function ChoiceManager({
     }
   };
 
-  const handleUpdateChoiceText = async (choice: Choice, newText: string) => {
+  const handleUpdateChoiceText = async (choice: ChoiceWithSignedUrls, newText: string) => {
     if (!newText.trim()) {
       toast.error("Choice text is required");
       return;
@@ -194,66 +199,19 @@ export function ChoiceManager({
 
       <div className="space-y-2">
         {choices.map((choice, index) => (
-          <div
+          <ChoiceItem
             key={choice.id}
-            className="flex items-center gap-2 rounded-md border p-3"
-          >
-            <div className="flex flex-col gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleMoveUp(index)}
-                disabled={index === 0}
-                className="h-5 w-5 p-0"
-              >
-                <ArrowUp className="h-3 w-3" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleMoveDown(index)}
-                disabled={index === choices.length - 1}
-                className="h-5 w-5 p-0"
-              >
-                <ArrowDown className="h-3 w-3" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Checkbox
-                checked={choice.isCorrect}
-                onCheckedChange={() => handleToggleCorrect(choice)}
-                aria-label={`Mark choice ${index + 1} as correct`}
-                id={`choice-${choice.id}-correct`}
-              />
-              <Label
-                htmlFor={`choice-${choice.id}-correct`}
-                className="text-xs text-muted-foreground cursor-pointer"
-              >
-                Correct
-              </Label>
-            </div>
-            <Input
-              key={choice.id}
-              defaultValue={choice.text}
-              onBlur={(e) => {
-                if (e.target.value !== choice.text) {
-                  handleUpdateChoiceText(choice, e.target.value);
-                }
-              }}
-              placeholder={`Choice ${index + 1}`}
-              className="flex-1"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDeleteChoice(choice.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+            choice={choice}
+            index={index}
+            totalChoices={choices.length}
+            questionId={questionId}
+            testId={testId}
+            onMoveUp={() => handleMoveUp(index)}
+            onMoveDown={() => handleMoveDown(index)}
+            onToggleCorrect={() => handleToggleCorrect(choice)}
+            onUpdateText={(newText) => handleUpdateChoiceText(choice, newText)}
+            onDelete={() => handleDeleteChoice(choice.id)}
+          />
         ))}
       </div>
 
@@ -279,6 +237,140 @@ export function ChoiceManager({
           Add
         </Button>
       </div>
+    </div>
+  );
+}
+
+interface ChoiceItemProps {
+  choice: ChoiceWithSignedUrls;
+  index: number;
+  totalChoices: number;
+  questionId: string;
+  testId: string;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onToggleCorrect: () => void;
+  onUpdateText: (text: string) => void;
+  onDelete: () => void;
+}
+
+function ChoiceItem({
+  choice,
+  index,
+  totalChoices,
+  questionId,
+  testId,
+  onMoveUp,
+  onMoveDown,
+  onToggleCorrect,
+  onUpdateText,
+  onDelete,
+}: ChoiceItemProps) {
+  const router = useRouter();
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+
+  const handleAudioUpload = async (key: string) => {
+    const result = await updateChoiceAction({
+      id: choice.id,
+      audioUrl: key,
+    });
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      setShowAudioRecorder(false);
+      router.refresh();
+    }
+  };
+
+  const handleAudioRemove = async () => {
+    const result = await updateChoiceAction({
+      id: choice.id,
+      audioUrl: null,
+    });
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      router.refresh();
+    }
+  };
+
+  return (
+    <div className="rounded-md border p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onMoveUp}
+            disabled={index === 0}
+            className="h-5 w-5 p-0"
+          >
+            <ArrowUp className="h-3 w-3" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onMoveDown}
+            disabled={index === totalChoices - 1}
+            className="h-5 w-5 p-0"
+          >
+            <ArrowDown className="h-3 w-3" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Checkbox
+            checked={choice.isCorrect}
+            onCheckedChange={onToggleCorrect}
+            aria-label={`Mark choice ${index + 1} as correct`}
+            id={`choice-${choice.id}-correct`}
+          />
+          <Label
+            htmlFor={`choice-${choice.id}-correct`}
+            className="text-xs text-muted-foreground cursor-pointer"
+          >
+            Correct
+          </Label>
+        </div>
+        <Input
+          defaultValue={choice.text}
+          onBlur={(e) => {
+            if (e.target.value !== choice.text) {
+              onUpdateText(e.target.value);
+            }
+          }}
+          placeholder={`Choice ${index + 1}`}
+          className="flex-1"
+        />
+        {choice.audioSignedUrl && <ChoiceAudioDisplay audioSignedUrl={choice.audioSignedUrl} />}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAudioRecorder(!showAudioRecorder)}
+          className={showAudioRecorder ? "text-primary" : ""}
+        >
+          <Mic className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {showAudioRecorder && (
+        <div className="pl-8 pt-2 border-t">
+          <AudioRecorder
+            type="choice_audio"
+            testId={testId}
+            questionId={questionId}
+            choiceId={choice.id}
+            currentAudioSignedUrl={choice.audioSignedUrl}
+            onUpload={handleAudioUpload}
+            onRemove={handleAudioRemove}
+          />
+        </div>
+      )}
     </div>
   );
 }
