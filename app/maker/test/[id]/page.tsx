@@ -11,6 +11,7 @@ import { auth } from "@/lib/auth";
 import { Navbar } from "@/lib/components/navbar";
 import { QuestionCard } from "@/lib/components/question-card";
 import { QuestionForm } from "@/lib/components/question-form";
+import { ShareTestDialog } from "@/lib/components/share-test-dialog";
 import { TestForm } from "@/lib/components/test-form";
 import { TestIdSchema } from "@/lib/models/test";
 import { getQuestionsForTest } from "@/lib/services/question";
@@ -151,18 +152,21 @@ export default async function TestEditorPage({ params }: TestEditorPageProps) {
                   </p>
                 )}
               </div>
-              <TestForm
-                test={test}
-                trigger={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    Edit Details
-                  </Button>
-                }
-              />
+              <div className="flex gap-2 w-full sm:w-auto">
+                <ShareTestDialog testId={id} testName={test.name} />
+                <TestForm
+                  test={test}
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 sm:flex-none"
+                    >
+                      Edit Details
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </div>
 

@@ -25,9 +25,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { deleteTestAction } from "@/lib/actions/test";
+import { ShareTestDialog } from "@/lib/components/share-test-dialog";
 import { TestForm } from "@/lib/components/test-form";
 import { type Test } from "@/lib/models/test";
-import { FileText, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { FileText, MoreVertical, Pencil, Share2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -86,6 +87,16 @@ export function TestCard({ test }: TestCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <ShareTestDialog
+                testId={test.id}
+                testName={test.name}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </DropdownMenuItem>
+                }
+              />
               <TestForm
                 test={test}
                 trigger={
