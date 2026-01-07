@@ -1,7 +1,7 @@
 ---
 id: task-4
 title: "Feature 5: Media Upload (Images & Audio)"
-status: To Do
+status: Done
 assignee: []
 created_date: "2025-12-09"
 labels: []
