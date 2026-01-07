@@ -79,6 +79,7 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   roles: many(userRole),
   testsCreated: many(test),
+  submissions: many(submission),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -146,6 +147,7 @@ export const testRelations = relations(test, ({ one, many }) => ({
     references: [user.id],
   }),
   questions: many(question),
+  submissions: many(submission),
 }));
 
 export const question = pgTable(
@@ -200,5 +202,80 @@ export const choiceRelations = relations(choice, ({ one }) => ({
   question: one(question, {
     fields: [choice.questionId],
     references: [question.id],
+  }),
+}));
+
+export const submission = pgTable(
+  "submission",
+  {
+    id: text("id").primaryKey(),
+    testId: text("test_id")
+      .notNull()
+      .references(() => test.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    submittedAt: timestamp("submitted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("submission_testId_idx").on(table.testId),
+    index("submission_userId_idx").on(table.userId),
+  ],
+);
+
+export const answer = pgTable(
+  "answer",
+  {
+    id: text("id").primaryKey(),
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submission.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    choiceId: text("choice_id").references(() => choice.id, {
+      onDelete: "cascade",
+    }),
+    textResponse: text("text_response"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("answer_submissionId_idx").on(table.submissionId),
+    index("answer_questionId_idx").on(table.questionId),
+    index("answer_choiceId_idx").on(table.choiceId),
+  ],
+);
+
+// Storage pattern:
+// - multi_choice: 1 answer row with choiceId set
+// - multi_answer: N answer rows with different choiceIds
+// - free_text: 1 answer row with textResponse set, choiceId null
+
+export const submissionRelations = relations(submission, ({ one, many }) => ({
+  test: one(test, {
+    fields: [submission.testId],
+    references: [test.id],
+  }),
+  user: one(user, {
+    fields: [submission.userId],
+    references: [user.id],
+  }),
+  answers: many(answer),
+}));
+
+export const answerRelations = relations(answer, ({ one }) => ({
+  submission: one(submission, {
+    fields: [answer.submissionId],
+    references: [submission.id],
+  }),
+  question: one(question, {
+    fields: [answer.questionId],
+    references: [question.id],
+  }),
+  choice: one(choice, {
+    fields: [answer.choiceId],
+    references: [choice.id],
   }),
 }));

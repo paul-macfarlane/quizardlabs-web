@@ -1,8 +1,51 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
 import { Navbar } from "@/lib/components/navbar";
+import { SubmissionCard } from "@/lib/components/submission-card";
+import { getSubmissionsByUser } from "@/lib/services/submission";
 import { ClipboardCheck } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+
+import { TestLinkForm } from "./test-link-form";
+
+async function SubmissionHistory({ userId }: { userId: string }) {
+  const submissions = await getSubmissionsByUser(userId);
+
+  if (submissions.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <ClipboardCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+        <p className="text-muted-foreground">No tests taken yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {submissions.map((submission) => (
+        <SubmissionCard key={submission.id} submission={submission} />
+      ))}
+    </div>
+  );
+}
+
+function SubmissionHistorySkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-24 w-full" />
+    </div>
+  );
+}
 
 export default async function TakerDashboard() {
   const session = await auth.api.getSession({
@@ -23,21 +66,35 @@ export default async function TakerDashboard() {
               Student Dashboard
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Access your assigned tests
+              Enter a test link or view your submission history
             </p>
           </div>
 
-          <div className="bg-card rounded-lg shadow-sm border p-6 sm:p-8 text-center">
-            <div className="text-muted-foreground mb-4">
-              <ClipboardCheck className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
-              No tests available
-            </h3>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Tests will appear here when your teacher assigns them
-            </p>
-          </div>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Take a Test</CardTitle>
+              <CardDescription>
+                Enter a test link or ID shared by your teacher
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TestLinkForm />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Tests</CardTitle>
+              <CardDescription>
+                Tests you have started or completed
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Suspense fallback={<SubmissionHistorySkeleton />}>
+                <SubmissionHistory userId={session.user.id} />
+              </Suspense>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
