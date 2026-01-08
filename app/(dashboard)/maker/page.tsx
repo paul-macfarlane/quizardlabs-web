@@ -1,12 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
-import { Navbar } from "@/lib/components/navbar";
 import { TestCard } from "@/lib/components/test-card";
 import { TestForm } from "@/lib/components/test-form";
 import { getTestsByCreator } from "@/lib/services/test";
 import { FileText } from "lucide-react";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 async function TestList({ userId }: { userId: string }) {
@@ -58,30 +56,21 @@ export default async function MakerDashboard() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) {
-    redirect("/");
-  }
 
   return (
-    <div className="min-h-screen bg-muted">
-      <Navbar userEmail={session.user.email} />
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+          Teacher Dashboard
+        </h2>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Create and manage your tests
+        </p>
+      </div>
 
-      <main className="container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              Teacher Dashboard
-            </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Create and manage your tests
-            </p>
-          </div>
-
-          <Suspense fallback={<TestListSkeleton />}>
-            <TestList userId={session.user.id} />
-          </Suspense>
-        </div>
-      </main>
+      <Suspense fallback={<TestListSkeleton />}>
+        <TestList userId={session!.user.id} />
+      </Suspense>
     </div>
   );
 }

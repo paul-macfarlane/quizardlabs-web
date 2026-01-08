@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
-import { Navbar } from "@/lib/components/navbar";
 import { TestViewer } from "@/lib/components/test-viewer";
 import { SubmissionIdSchema } from "@/lib/models/submission";
 import { getQuestionsForTest } from "@/lib/services/question";
@@ -13,7 +12,7 @@ import { getTest } from "@/lib/services/test";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 interface SubmissionPageProps {
@@ -30,7 +29,6 @@ async function SubmissionContent({ submissionId }: { submissionId: string }) {
     getTest(submissionWithAnswers.testId),
     getQuestionsForTest(submissionWithAnswers.testId),
   ]);
-
   if (!test) {
     notFound();
   }
@@ -116,9 +114,6 @@ export default async function SubmissionPage({ params }: SubmissionPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) {
-    redirect("/");
-  }
 
   const { id: rawId } = await params;
 
@@ -128,31 +123,24 @@ export default async function SubmissionPage({ params }: SubmissionPageProps) {
   }
 
   const submissionId = parseResult.data;
-
-  if (!(await canUserAccessSubmission(submissionId, session.user.id))) {
+  if (!(await canUserAccessSubmission(submissionId, session!.user.id))) {
     notFound();
   }
 
   return (
-    <div className="min-h-screen bg-muted">
-      <Navbar userEmail={session.user.email} />
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-4">
+        <Link href="/taker">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </Link>
+      </div>
 
-      <main className="container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-4">
-            <Link href="/taker">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
-
-          <Suspense fallback={<SubmissionContentSkeleton />}>
-            <SubmissionContent submissionId={submissionId} />
-          </Suspense>
-        </div>
-      </main>
+      <Suspense fallback={<SubmissionContentSkeleton />}>
+        <SubmissionContent submissionId={submissionId} />
+      </Suspense>
     </div>
   );
 }

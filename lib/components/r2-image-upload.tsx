@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { getDownloadUrl, getUploadUrl } from "@/lib/actions/r2-actions";
 import Image from "next/image";
 import { useState } from "react";
@@ -97,14 +98,9 @@ export function R2ImageUpload() {
               <span className="text-sm text-gray-700 truncate">
                 {file.name}
               </span>
-              <button
-                onClick={handleUpload}
-                disabled={uploading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-                  disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
+              <Button onClick={handleUpload} disabled={uploading}>
                 {uploading ? "Uploading..." : "Upload"}
-              </button>
+              </Button>
             </div>
           )}
 
