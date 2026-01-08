@@ -192,9 +192,8 @@ export function AudioRecorder({
           <Button
             type="button"
             variant="outline"
-            size="sm"
+            size="icon-sm"
             onClick={toggleExistingAudio}
-            className="h-8 w-8 p-0"
             aria-label={isPlayingExisting ? "Pause" : "Play existing audio"}
           >
             {isPlayingExisting ? (
@@ -209,10 +208,10 @@ export function AudioRecorder({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="icon-sm"
             onClick={handleRemove}
             disabled={isDeleting}
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive"
             aria-label="Remove audio"
           >
             {isDeleting ? (

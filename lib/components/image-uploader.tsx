@@ -135,7 +135,7 @@ export function ImageUploader({
             <Button
               type="button"
               variant="secondary"
-              size="sm"
+              size="icon-sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
             >
@@ -148,7 +148,7 @@ export function ImageUploader({
             <Button
               type="button"
               variant="destructive"
-              size="sm"
+              size="icon-sm"
               onClick={handleRemove}
               disabled={isDeleting}
             >

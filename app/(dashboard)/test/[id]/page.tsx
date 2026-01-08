@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
-import { Navbar } from "@/lib/components/navbar";
 import { TestViewer } from "@/lib/components/test-viewer";
 import { TestIdSchema } from "@/lib/models/test";
 import { getQuestionsForTest } from "@/lib/services/question";
@@ -10,7 +9,7 @@ import {
 } from "@/lib/services/submission";
 import { getTest } from "@/lib/services/test";
 import { headers } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 async function TestContent({
@@ -26,7 +25,6 @@ async function TestContent({
     getTest(testId),
     getQuestionsForTest(testId),
   ]);
-
   if (!test) {
     notFound();
   }
@@ -104,9 +102,6 @@ export default async function TestTakingPage({ params }: TestTakingPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) {
-    redirect("/");
-  }
 
   const { id: rawId } = await params;
 
@@ -116,23 +111,16 @@ export default async function TestTakingPage({ params }: TestTakingPageProps) {
   }
 
   const testId = parseResult.data;
-
   const test = await getTest(testId);
   if (!test) {
     notFound();
   }
 
   return (
-    <div className="min-h-screen bg-muted">
-      <Navbar userEmail={session.user.email} />
-
-      <main className="container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
-        <div className="max-w-3xl mx-auto">
-          <Suspense fallback={<TestContentSkeleton />}>
-            <TestContent testId={testId} userId={session.user.id} />
-          </Suspense>
-        </div>
-      </main>
+    <div className="max-w-3xl mx-auto">
+      <Suspense fallback={<TestContentSkeleton />}>
+        <TestContent testId={testId} userId={session!.user.id} />
+      </Suspense>
     </div>
   );
 }

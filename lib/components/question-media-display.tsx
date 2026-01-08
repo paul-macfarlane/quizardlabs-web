@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Pause, Play, Volume2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -59,10 +60,11 @@ export function QuestionMediaDisplay({
       {audioSignedUrl && (
         <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/50">
           <audio ref={audioRef} src={audioSignedUrl} preload="metadata" />
-          <button
+          <Button
             type="button"
+            size="icon"
             onClick={togglePlay}
-            className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="rounded-full"
             aria-label={isPlaying ? "Pause audio" : "Play audio"}
           >
             {isPlaying ? (
@@ -70,7 +72,7 @@ export function QuestionMediaDisplay({
             ) : (
               <Play className="h-4 w-4 ml-0.5" />
             )}
-          </button>
+          </Button>
           <Volume2 className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Question audio</span>
         </div>

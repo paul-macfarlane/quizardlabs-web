@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Pause, Play, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -38,10 +39,12 @@ export function ChoiceAudioDisplay({
   return (
     <div className="flex items-center gap-1">
       <audio ref={audioRef} src={audioSignedUrl} preload="metadata" />
-      <button
+      <Button
         type="button"
+        size="icon-sm"
+        variant="ghost"
         onClick={togglePlay}
-        className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+        className="rounded-full bg-primary/10 text-primary hover:bg-primary/20"
         aria-label={isPlaying ? "Pause" : "Play choice audio"}
       >
         {isPlaying ? (
@@ -49,7 +52,7 @@ export function ChoiceAudioDisplay({
         ) : (
           <Play className="h-3 w-3 ml-0.5" />
         )}
-      </button>
+      </Button>
       <Volume2 className="h-3 w-3 text-muted-foreground" />
     </div>
   );

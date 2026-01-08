@@ -7,12 +7,10 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
-import { Navbar } from "@/lib/components/navbar";
 import { getSubmissionsNeedingGrading } from "@/lib/services/grading";
 import { ClipboardCheck } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 async function GradingList({ userId }: { userId: string }) {
@@ -91,30 +89,22 @@ export default async function GradingDashboard() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) {
-    redirect("/");
-  }
 
   return (
-    <>
-      <Navbar userEmail={session.user.email} />
-      <main className="container mx-auto px-4 py-8 pt-20 sm:pt-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3 mb-2">
-              <ClipboardCheck className="w-7 h-7 sm:w-8 sm:h-8" />
-              Grading
-            </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Review and grade free-text responses from your tests
-            </p>
-          </div>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3 mb-2">
+          <ClipboardCheck className="w-7 h-7 sm:w-8 sm:h-8" />
+          Grading
+        </h2>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Review and grade free-text responses from your tests
+        </p>
+      </div>
 
-          <Suspense fallback={<GradingListSkeleton />}>
-            <GradingList userId={session.user.id} />
-          </Suspense>
-        </div>
-      </main>
-    </>
+      <Suspense fallback={<GradingListSkeleton />}>
+        <GradingList userId={session!.user.id} />
+      </Suspense>
+    </div>
   );
 }
