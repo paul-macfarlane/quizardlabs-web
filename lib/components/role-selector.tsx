@@ -86,7 +86,9 @@ export function RoleSelector() {
         </Label>
 
         {state.error && (
-          <div className="text-sm text-destructive text-center">{state.error}</div>
+          <div className="text-sm text-destructive text-center">
+            {state.error}
+          </div>
         )}
 
         <Button type="submit" disabled={isPending} className="w-full" size="lg">

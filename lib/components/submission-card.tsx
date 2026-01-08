@@ -8,7 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SubmissionWithTestInfo } from "@/lib/services/submission";
-import { CheckCircle, Clock } from "lucide-react";
+import { getGradeColorClass } from "@/lib/utils";
+import { CheckCircle, Clock, Hourglass } from "lucide-react";
 import Link from "next/link";
 
 interface SubmissionCardProps {
@@ -17,6 +18,7 @@ interface SubmissionCardProps {
 
 export function SubmissionCard({ submission }: SubmissionCardProps) {
   const isCompleted = submission.submittedAt !== null;
+  const isFullyGraded = submission.isFullyGraded;
 
   return (
     <Link href={`/submission/${submission.id}`}>
@@ -33,25 +35,46 @@ export function SubmissionCard({ submission }: SubmissionCardProps) {
                 </CardDescription>
               )}
             </div>
-            <span
-              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                isCompleted
-                  ? "bg-success text-success-foreground"
-                  : "bg-warning text-warning-foreground"
-              }`}
-            >
-              {isCompleted ? (
-                <>
-                  <CheckCircle className="h-3 w-3" />
-                  <span className="hidden sm:inline">Completed</span>
-                </>
-              ) : (
-                <>
-                  <Clock className="h-3 w-3" />
-                  <span className="hidden sm:inline">In Progress</span>
-                </>
+            <div className="flex flex-col items-end gap-1">
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                  isCompleted
+                    ? "bg-success text-success-foreground"
+                    : "bg-warning text-warning-foreground"
+                }`}
+              >
+                {isCompleted ? (
+                  <>
+                    <CheckCircle className="h-3 w-3" />
+                    <span className="hidden sm:inline">Completed</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-3 w-3" />
+                    <span className="hidden sm:inline">In Progress</span>
+                  </>
+                )}
+              </span>
+              {isCompleted && (
+                <span className="text-sm font-medium">
+                  {isFullyGraded ? (
+                    <span
+                      className={getGradeColorClass(
+                        submission.score ?? 0,
+                        submission.maxScore ?? 1,
+                      )}
+                    >
+                      {submission.score}/{submission.maxScore}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      <Hourglass className="h-3 w-3" />
+                      Pending review
+                    </span>
+                  )}
+                </span>
               )}
-            </span>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

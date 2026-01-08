@@ -98,7 +98,10 @@ export function ChoiceManager({
     }
   };
 
-  const handleUpdateChoiceText = async (choice: ChoiceWithSignedUrls, newText: string) => {
+  const handleUpdateChoiceText = async (
+    choice: ChoiceWithSignedUrls,
+    newText: string,
+  ) => {
     if (!newText.trim()) {
       toast.error("Choice text is required");
       return;
@@ -343,7 +346,9 @@ function ChoiceItem({
           placeholder={`Choice ${index + 1}`}
           className="flex-1"
         />
-        {choice.audioSignedUrl && <ChoiceAudioDisplay audioSignedUrl={choice.audioSignedUrl} />}
+        {choice.audioSignedUrl && (
+          <ChoiceAudioDisplay audioSignedUrl={choice.audioSignedUrl} />
+        )}
         <Button
           type="button"
           variant="ghost"

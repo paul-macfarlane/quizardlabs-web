@@ -4,7 +4,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import type { QuestionWithChoicesAndSignedUrls } from "@/lib/services/question";
+import type {
+  ChoiceWithSignedUrls,
+  QuestionWithChoicesAndSignedUrls,
+} from "@/lib/services/question";
+
 import { ChoiceAudioDisplay } from "./choice-audio-display";
 import { QuestionMediaDisplay } from "./question-media-display";
 
@@ -72,7 +76,7 @@ export function QuestionResponse({
 }
 
 interface MultiChoiceInputProps {
-  choices: QuestionWithChoicesAndSignedUrls["choices"];
+  choices: ChoiceWithSignedUrls[];
   selectedId: string | null;
   onChange: (id: string | null) => void;
   disabled?: boolean;
@@ -109,7 +113,7 @@ function MultiChoiceInput({
 }
 
 interface MultiAnswerInputProps {
-  choices: QuestionWithChoicesAndSignedUrls["choices"];
+  choices: ChoiceWithSignedUrls[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   disabled?: boolean;

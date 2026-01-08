@@ -7,7 +7,9 @@ interface ChoiceAudioDisplayProps {
   audioSignedUrl: string;
 }
 
-export function ChoiceAudioDisplay({ audioSignedUrl }: ChoiceAudioDisplayProps) {
+export function ChoiceAudioDisplay({
+  audioSignedUrl,
+}: ChoiceAudioDisplayProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 

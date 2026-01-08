@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,8 +20,10 @@ import {
 } from "@/lib/actions/question";
 import {
   AddQuestionSchema,
+  FREE_TEXT_MODES,
   QUESTION_TYPES,
   type Question,
+  getFreeTextModeDisplayName,
   getQuestionTypeDisplayName,
 } from "@/lib/models/question";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,6 +59,8 @@ export function QuestionForm({
       text: question?.text || "",
       type: question?.type || "multi_choice",
       orderIndex: question?.orderIndex || String(questionCount),
+      freeTextMode: question?.freeTextMode || null,
+      expectedAnswer: question?.expectedAnswer || null,
     },
   });
 
@@ -63,6 +68,12 @@ export function QuestionForm({
     control: form.control,
     name: "type",
     defaultValue: question?.type || "multi_choice",
+  });
+
+  const freeTextMode = useWatch({
+    control: form.control,
+    name: "freeTextMode",
+    defaultValue: question?.freeTextMode || null,
   });
 
   const onSubmit = async (data: QuestionFormData) => {
@@ -131,12 +142,16 @@ export function QuestionForm({
               <Label>Question Type *</Label>
               <RadioGroup
                 value={questionType}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
                   form.setValue(
                     "type",
                     value as "multi_choice" | "multi_answer" | "free_text",
-                  )
-                }
+                  );
+                  if (value !== "free_text") {
+                    form.setValue("freeTextMode", null);
+                    form.setValue("expectedAnswer", null);
+                  }
+                }}
               >
                 {QUESTION_TYPES.map((type) => (
                   <div key={type} className="flex items-center space-x-2">
@@ -151,6 +166,56 @@ export function QuestionForm({
                 ))}
               </RadioGroup>
             </div>
+
+            {questionType === "free_text" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Grading Mode *</Label>
+                  <RadioGroup
+                    value={freeTextMode || ""}
+                    onValueChange={(value) => {
+                      form.setValue(
+                        "freeTextMode",
+                        value as "exact_match" | "manual",
+                      );
+                      if (value !== "exact_match") {
+                        form.setValue("expectedAnswer", null);
+                      }
+                    }}
+                  >
+                    {FREE_TEXT_MODES.map((mode) => (
+                      <div key={mode} className="flex items-center space-x-2">
+                        <RadioGroupItem value={mode} id={mode} />
+                        <Label
+                          htmlFor={mode}
+                          className="font-normal cursor-pointer"
+                        >
+                          {getFreeTextModeDisplayName(mode)}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  <p className="text-xs text-muted-foreground">
+                    Exact Match: Auto-grades based on text comparison. Manual:
+                    Teacher grades each response.
+                  </p>
+                </div>
+
+                {freeTextMode === "exact_match" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="expectedAnswer">Expected Answer *</Label>
+                    <Input
+                      id="expectedAnswer"
+                      placeholder="Enter the correct answer..."
+                      {...form.register("expectedAnswer")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Case-insensitive comparison will be used.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button

@@ -40,6 +40,8 @@ describe("getQuestionsForTest", () => {
         type: "multi_choice" as const,
         imageUrl: null,
         audioUrl: null,
+        freeTextMode: null,
+        expectedAnswer: null,
         createdAt: new Date(),
         choices: [],
       },
@@ -184,6 +186,8 @@ describe("getQuestionWithChoices", () => {
       type: "multi_choice" as const,
       imageUrl: null,
       audioUrl: null,
+      freeTextMode: null,
+      expectedAnswer: null,
       createdAt: new Date(),
       choices: [
         {

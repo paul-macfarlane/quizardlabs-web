@@ -1,6 +1,6 @@
 {
-  "id": "8b27f2bb-fd5b-4d46-a592-ea19f5d47c96",
-  "prevId": "2c1b9cb4-98d6-4053-95a0-1db34207a751",
+  "id": "2dc8c3c7-347a-4c36-bcd9-cc65dc420187",
+  "prevId": "8b27f2bb-fd5b-4d46-a592-ea19f5d47c96",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -156,6 +156,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "is_correct": {
+          "name": "is_correct",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "graded_at": {
+          "name": "graded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "graded_by": {
+          "name": "graded_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -237,6 +255,15 @@
           "columnsFrom": ["choice_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "answer_graded_by_user_id_fk": {
+          "name": "answer_graded_by_user_id_fk",
+          "tableFrom": "answer",
+          "tableTo": "user",
+          "columnsFrom": ["graded_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -379,6 +406,18 @@
         },
         "audio_url": {
           "name": "audio_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "free_text_mode": {
+          "name": "free_text_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expected_answer": {
+          "name": "expected_answer",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -568,6 +607,25 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_score": {
+          "name": "max_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_fully_graded": {
+          "name": "is_fully_graded",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",

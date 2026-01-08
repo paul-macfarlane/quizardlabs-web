@@ -9,7 +9,8 @@ import {
 import type { Submission } from "@/lib/models/submission";
 import type { Test } from "@/lib/models/test";
 import type { QuestionWithChoicesAndSignedUrls } from "@/lib/services/question";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { getGradeColorClass } from "@/lib/utils";
+import { CheckCircle, Hourglass, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -140,6 +141,20 @@ export function TestViewer({
   const isTestCompleted = submission.submittedAt !== null;
   const isSaving = savingQuestions.size > 0;
 
+  const answeredCount = questions.filter((q) => {
+    const answer = answers[q.id];
+    if (!answer) return false;
+
+    if (q.type === "free_text") {
+      return answer.textResponse && answer.textResponse.trim() !== "";
+    } else {
+      return answer.selectedChoiceIds.length > 0;
+    }
+  }).length;
+
+  const allQuestionsAnswered = answeredCount === questions.length;
+  const unansweredCount = questions.length - answeredCount;
+
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
@@ -178,6 +193,21 @@ export function TestViewer({
             <p className="text-success-foreground/80 text-sm">
               Submitted on {new Date(submission.submittedAt!).toLocaleString()}
             </p>
+            {submission.isFullyGraded ? (
+              <p
+                className={`text-2xl font-bold mt-4 ${getGradeColorClass(
+                  submission.score ?? 0,
+                  submission.maxScore ?? 1,
+                )}`}
+              >
+                Score: {submission.score}/{submission.maxScore}
+              </p>
+            ) : (
+              <p className="text-sm text-success-foreground/70 mt-4 flex items-center justify-center gap-2">
+                <Hourglass className="h-4 w-4" />
+                Pending review
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -203,11 +233,17 @@ export function TestViewer({
       </div>
 
       {!isTestCompleted && (
-        <div className="flex justify-end pb-8">
+        <div className="flex flex-col items-end gap-2 pb-8">
+          {!allQuestionsAnswered && (
+            <p className="text-sm text-muted-foreground">
+              {unansweredCount} question{unansweredCount !== 1 ? "s" : ""}{" "}
+              remaining
+            </p>
+          )}
           <Button
             size="lg"
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !allQuestionsAnswered}
           >
             {isSubmitting ? (
               <>
