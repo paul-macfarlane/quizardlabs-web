@@ -165,11 +165,154 @@ export async function saveAnswer(
 export async function submitSubmission(
   submissionId: string,
 ): Promise<Submission | null> {
+  const submissionData = await db.query.submission.findFirst({
+    where: eq(submission.id, submissionId),
+    with: {
+      answers: true,
+      test: {
+        with: {
+          questions: {
+            with: {
+              choices: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!submissionData) return null;
+
+  const now = new Date();
+  const allQuestions = submissionData.test.questions;
+  const questionsMap = new Map(allQuestions.map((q) => [q.id, q]));
+
+  const answersByQuestion = new Map<string, typeof submissionData.answers>();
+  for (const ans of submissionData.answers) {
+    const existing = answersByQuestion.get(ans.questionId) || [];
+    existing.push(ans);
+    answersByQuestion.set(ans.questionId, existing);
+  }
+
+  const unansweredQuestions: string[] = [];
+  for (const question of allQuestions) {
+    const questionAnswers = answersByQuestion.get(question.id);
+    if (!questionAnswers || questionAnswers.length === 0) {
+      unansweredQuestions.push(question.id);
+      continue;
+    }
+
+    if (question.type === "free_text") {
+      const hasText = questionAnswers.some(
+        (a) => a.textResponse && a.textResponse.trim() !== "",
+      );
+      if (!hasText) {
+        unansweredQuestions.push(question.id);
+      }
+    } else {
+      const hasChoice = questionAnswers.some((a) => a.choiceId !== null);
+      if (!hasChoice) {
+        unansweredQuestions.push(question.id);
+      }
+    }
+  }
+
+  if (unansweredQuestions.length > 0) {
+    throw new Error(
+      `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remain unanswered.`,
+    );
+  }
+
+  let hasUngradedAnswers = false;
+
+  await db.transaction(async (tx) => {
+    for (const [questionId, questionAnswers] of answersByQuestion) {
+      const question = questionsMap.get(questionId);
+      if (!question) continue;
+
+      if (question.type === "multi_choice") {
+        const selectedChoiceId = questionAnswers[0]?.choiceId;
+        const correctChoiceIds = question.choices
+          .filter((c) => c.isCorrect)
+          .map((c) => c.id);
+
+        const isCorrect = selectedChoiceId
+          ? correctChoiceIds.includes(selectedChoiceId)
+          : false;
+
+        for (const ans of questionAnswers) {
+          await tx
+            .update(answer)
+            .set({ isCorrect, gradedAt: now, gradedBy: null })
+            .where(eq(answer.id, ans.id));
+        }
+      } else if (question.type === "multi_answer") {
+        const selectedChoiceIds = questionAnswers
+          .map((a) => a.choiceId)
+          .filter((id): id is string => id !== null);
+        const correctChoiceIds = question.choices
+          .filter((c) => c.isCorrect)
+          .map((c) => c.id);
+
+        const selectedSet = new Set(selectedChoiceIds);
+        const correctSet = new Set(correctChoiceIds);
+
+        const isCorrect =
+          selectedSet.size === correctSet.size &&
+          [...correctSet].every((id) => selectedSet.has(id));
+
+        for (const ans of questionAnswers) {
+          await tx
+            .update(answer)
+            .set({ isCorrect, gradedAt: now, gradedBy: null })
+            .where(eq(answer.id, ans.id));
+        }
+      } else if (question.type === "free_text") {
+        if (
+          question.freeTextMode === "exact_match" &&
+          question.expectedAnswer
+        ) {
+          const response = questionAnswers[0]?.textResponse;
+          const isCorrect = response
+            ? response.toLowerCase().trim() ===
+              question.expectedAnswer.toLowerCase().trim()
+            : false;
+
+          for (const ans of questionAnswers) {
+            await tx
+              .update(answer)
+              .set({ isCorrect, gradedAt: now, gradedBy: null })
+              .where(eq(answer.id, ans.id));
+          }
+        } else {
+          hasUngradedAnswers = true;
+        }
+      }
+    }
+  });
+
+  const maxScore = submissionData.test.questions.length;
+
   const [updated] = await db
     .update(submission)
-    .set({ submittedAt: new Date() })
+    .set({
+      submittedAt: now,
+      maxScore,
+      isFullyGraded: !hasUngradedAnswers,
+      score: hasUngradedAnswers ? null : undefined,
+    })
     .where(eq(submission.id, submissionId))
     .returning();
+
+  if (updated && !hasUngradedAnswers) {
+    const { recalculateSubmissionScore } = await import("./grading");
+    await recalculateSubmissionScore(submissionId);
+    const [final] = await db
+      .select()
+      .from(submission)
+      .where(eq(submission.id, submissionId));
+    return final as Submission;
+  }
 
   return updated ? (updated as Submission) : null;
 }

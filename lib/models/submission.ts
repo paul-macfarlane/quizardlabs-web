@@ -15,12 +15,19 @@ export const StartSubmissionSchema = z.object({
 export const SaveAnswerSchema = z.object({
   submissionId: z.string().min(1, "Submission ID is required"),
   questionId: z.string().min(1, "Question ID is required"),
-  choiceIds: z.array(z.string()).optional(), // For choice-based questions
-  textResponse: z.string().optional(), // For free_text questions
+  choiceIds: z.array(z.string()).optional(),
+  textResponse: z.string().optional(),
 });
 
 export const SubmitSubmissionSchema = z.object({
   submissionId: z.string().min(1, "Submission ID is required"),
 });
 
-export const SubmissionIdSchema = z.string().min(1, "Submission ID is required");
+export const SubmissionIdSchema = z
+  .string()
+  .min(1, "Submission ID is required");
+
+export const GradeAnswerSchema = z.object({
+  answerId: z.string().min(1, "Answer ID is required"),
+  isCorrect: z.boolean(),
+});

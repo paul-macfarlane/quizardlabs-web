@@ -16,6 +16,10 @@ export const QUESTION_TYPES = [
 
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 
+export const FREE_TEXT_MODES = ["exact_match", "manual"] as const;
+
+export type FreeTextMode = (typeof FREE_TEXT_MODES)[number];
+
 export function getQuestionTypeDisplayName(type: QuestionType): string {
   const displayNames: Record<QuestionType, string> = {
     multi_choice: "Multiple Choice",
@@ -25,11 +29,21 @@ export function getQuestionTypeDisplayName(type: QuestionType): string {
   return displayNames[type];
 }
 
+export function getFreeTextModeDisplayName(mode: FreeTextMode): string {
+  const displayNames: Record<FreeTextMode, string> = {
+    exact_match: "Exact Match",
+    manual: "Manual Grading",
+  };
+  return displayNames[mode];
+}
+
 export const AddQuestionSchema = z.object({
   testId: z.string().min(1, "Test ID is required"),
   text: z.string().min(1, "Question text is required"),
   type: z.enum(QUESTION_TYPES),
   orderIndex: z.string().min(1, "Order index is required"),
+  freeTextMode: z.enum(FREE_TEXT_MODES).nullable().optional(),
+  expectedAnswer: z.string().nullable().optional(),
 });
 
 export const UpdateQuestionSchema = z.object({
@@ -37,6 +51,8 @@ export const UpdateQuestionSchema = z.object({
   text: z.string().min(1, "Question text is required").optional(),
   type: z.enum(QUESTION_TYPES).optional(),
   orderIndex: z.string().min(1, "Order index is required").optional(),
+  freeTextMode: z.enum(FREE_TEXT_MODES).nullable().optional(),
+  expectedAnswer: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   audioUrl: z.string().nullable().optional(),
 });

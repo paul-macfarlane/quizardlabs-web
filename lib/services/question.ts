@@ -10,6 +10,10 @@ import { signMediaUrl } from "@/lib/services/media";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+export type QuestionWithChoices = Question & {
+  choices: Choice[];
+};
+
 export type QuestionWithSignedUrls = Question & {
   imageSignedUrl: string | null;
   audioSignedUrl: string | null;
@@ -23,14 +27,15 @@ export type QuestionWithChoicesAndSignedUrls = QuestionWithSignedUrls & {
   choices: ChoiceWithSignedUrls[];
 };
 
-async function signQuestionMediaUrls<T extends Question & { choices: Choice[] }>(
-  q: T,
-): Promise<T & { imageSignedUrl: string | null; audioSignedUrl: string | null; choices: (Choice & { audioSignedUrl: string | null })[] }> {
-  const [imageSignedUrl, audioSignedUrl, ...choiceAudioSignedUrls] = await Promise.all([
-    signMediaUrl(q.imageUrl),
-    signMediaUrl(q.audioUrl),
-    ...q.choices.map((c) => signMediaUrl(c.audioUrl)),
-  ]);
+async function signQuestionMediaUrls(
+  q: Question & { choices: Choice[] },
+): Promise<QuestionWithChoicesAndSignedUrls> {
+  const [imageSignedUrl, audioSignedUrl, ...choiceAudioSignedUrls] =
+    await Promise.all([
+      signMediaUrl(q.imageUrl),
+      signMediaUrl(q.audioUrl),
+      ...q.choices.map((c) => signMediaUrl(c.audioUrl)),
+    ]);
 
   return {
     ...q,

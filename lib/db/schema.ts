@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // --- Auth Schema ---
 export const user = pgTable("user", {
@@ -164,6 +171,10 @@ export const question = pgTable(
     }).notNull(),
     imageUrl: text("image_url"),
     audioUrl: text("audio_url"),
+    freeTextMode: text("free_text_mode", {
+      enum: ["exact_match", "manual"],
+    }),
+    expectedAnswer: text("expected_answer"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -217,6 +228,9 @@ export const submission = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     startedAt: timestamp("started_at").defaultNow().notNull(),
     submittedAt: timestamp("submitted_at"),
+    score: integer("score"),
+    maxScore: integer("max_score"),
+    isFullyGraded: boolean("is_fully_graded").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -239,6 +253,9 @@ export const answer = pgTable(
       onDelete: "cascade",
     }),
     textResponse: text("text_response"),
+    isCorrect: boolean("is_correct"),
+    gradedAt: timestamp("graded_at"),
+    gradedBy: text("graded_by").references(() => user.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
