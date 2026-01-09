@@ -45,8 +45,16 @@ export function Navbar({ userEmail, userImage, userRole }: NavbarProps) {
         <div className="flex items-center gap-4">
           <Link
             href={dashboardLink}
-            className="text-xl sm:text-2xl font-bold text-foreground truncate hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-xl sm:text-2xl font-bold text-foreground truncate hover:text-primary transition-colors"
           >
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/icon.svg"
+                alt="Quizardlabs Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
             Quizardlabs
           </Link>
           {isTestMaker && (
