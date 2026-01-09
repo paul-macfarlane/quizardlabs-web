@@ -197,7 +197,7 @@ export function QuestionForm({
                   </RadioGroup>
                   <p className="text-xs text-muted-foreground">
                     Exact Match: Auto-grades based on text comparison. Manual:
-                    Teacher grades each response.
+                    Teacher grades the response.
                   </p>
                 </div>
 
