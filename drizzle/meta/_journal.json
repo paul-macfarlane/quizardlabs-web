@@ -50,6 +50,13 @@
       "when": 1767761354958,
       "tag": "0006_simple_master_mold",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1768015499841,
+      "tag": "0007_spotty_paladin",
+      "breakpoints": true
     }
   ]
 }

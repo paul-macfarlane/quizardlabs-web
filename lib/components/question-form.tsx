@@ -118,7 +118,7 @@ export function QuestionForm({
             <DialogDescription>
               {question
                 ? "Update the question details"
-                : "Add a new question to this test"}
+                : "Set the question text and type. You can add images, audio, and answer choices after creating the question."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

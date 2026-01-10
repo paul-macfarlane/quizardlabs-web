@@ -255,7 +255,9 @@ export const answer = pgTable(
     textResponse: text("text_response"),
     isCorrect: boolean("is_correct"),
     gradedAt: timestamp("graded_at"),
-    gradedBy: text("graded_by").references(() => user.id),
+    gradedBy: text("graded_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [

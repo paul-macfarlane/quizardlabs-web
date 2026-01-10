@@ -16,7 +16,7 @@ export const SaveAnswerSchema = z.object({
   submissionId: z.string().min(1, "Submission ID is required"),
   questionId: z.string().min(1, "Question ID is required"),
   choiceIds: z.array(z.string()).optional(),
-  textResponse: z.string().optional(),
+  textResponse: z.string().max(5000, "Response is too long").optional(),
 });
 
 export const SubmitSubmissionSchema = z.object({

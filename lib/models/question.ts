@@ -39,20 +39,35 @@ export function getFreeTextModeDisplayName(mode: FreeTextMode): string {
 
 export const AddQuestionSchema = z.object({
   testId: z.string().min(1, "Test ID is required"),
-  text: z.string().min(1, "Question text is required"),
+  text: z
+    .string()
+    .min(1, "Question text is required")
+    .max(5000, "Question text is too long"),
   type: z.enum(QUESTION_TYPES),
   orderIndex: z.string().min(1, "Order index is required"),
   freeTextMode: z.enum(FREE_TEXT_MODES).nullable().optional(),
-  expectedAnswer: z.string().nullable().optional(),
+  expectedAnswer: z
+    .string()
+    .max(1000, "Expected answer is too long")
+    .nullable()
+    .optional(),
 });
 
 export const UpdateQuestionSchema = z.object({
   id: z.string().min(1, "Question ID is required"),
-  text: z.string().min(1, "Question text is required").optional(),
+  text: z
+    .string()
+    .min(1, "Question text is required")
+    .max(5000, "Question text is too long")
+    .optional(),
   type: z.enum(QUESTION_TYPES).optional(),
   orderIndex: z.string().min(1, "Order index is required").optional(),
   freeTextMode: z.enum(FREE_TEXT_MODES).nullable().optional(),
-  expectedAnswer: z.string().nullable().optional(),
+  expectedAnswer: z
+    .string()
+    .max(1000, "Expected answer is too long")
+    .nullable()
+    .optional(),
   imageUrl: z.string().nullable().optional(),
   audioUrl: z.string().nullable().optional(),
 });
@@ -61,14 +76,21 @@ export const QuestionIdSchema = z.string().min(1, "Question ID is required");
 
 export const AddChoiceSchema = z.object({
   questionId: z.string().min(1, "Question ID is required"),
-  text: z.string().min(1, "Choice text is required"),
+  text: z
+    .string()
+    .min(1, "Choice text is required")
+    .max(1000, "Choice text is too long"),
   orderIndex: z.string().min(1, "Order index is required"),
   isCorrect: z.boolean().default(false),
 });
 
 export const UpdateChoiceSchema = z.object({
   id: z.string().min(1, "Choice ID is required"),
-  text: z.string().min(1, "Choice text is required").optional(),
+  text: z
+    .string()
+    .min(1, "Choice text is required")
+    .max(1000, "Choice text is too long")
+    .optional(),
   orderIndex: z.string().min(1, "Order index is required").optional(),
   isCorrect: z.boolean().optional(),
   audioUrl: z.string().nullable().optional(),
