@@ -14,19 +14,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
+import { ProfileDialog } from "@/lib/components/profile-dialog";
 import type { Role } from "@/lib/models/user";
-import { ClipboardCheck, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import {
+  ClipboardCheck,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  User,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface NavbarProps {
+  userName: string;
   userEmail: string;
   userImage?: string | null;
   userRole: Role;
+  gradingCount?: number;
 }
 
-export function Navbar({ userEmail, userImage, userRole }: NavbarProps) {
+export function Navbar({
+  userName,
+  userEmail,
+  userImage,
+  userRole,
+  gradingCount = 0,
+}: NavbarProps) {
   const { setTheme } = useTheme();
   const router = useRouter();
 
@@ -35,7 +51,7 @@ export function Navbar({ userEmail, userImage, userRole }: NavbarProps) {
     router.push("/");
   };
 
-  const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
+  const userInitials = userName.slice(0, 2).toUpperCase();
   const isTestMaker = userRole === "test_maker";
   const dashboardLink = isTestMaker ? "/maker" : "/taker";
 
@@ -64,6 +80,11 @@ export function Navbar({ userEmail, userImage, userRole }: NavbarProps) {
             >
               <ClipboardCheck className="w-4 h-4" />
               Grading
+              {gradingCount > 0 && (
+                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs font-medium rounded-full bg-warning text-warning-foreground">
+                  {gradingCount > 99 ? "99+" : gradingCount}
+                </span>
+              )}
             </Link>
           )}
         </div>
@@ -71,10 +92,15 @@ export function Navbar({ userEmail, userImage, userRole }: NavbarProps) {
           {isTestMaker && (
             <Link
               href="/maker/grading"
-              className="sm:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="sm:hidden relative p-2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Grading"
             >
               <ClipboardCheck className="w-5 h-5" />
+              {gradingCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-medium rounded-full bg-warning text-warning-foreground">
+                  {gradingCount > 99 ? "99+" : gradingCount}
+                </span>
+              )}
             </Link>
           )}
 
@@ -91,14 +117,25 @@ export function Navbar({ userEmail, userImage, userRole }: NavbarProps) {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none truncate">
-                    {isTestMaker ? "Teacher" : "Student"}
+                    {userName}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground truncate">
-                    {userEmail}
+                    {isTestMaker ? "Teacher" : "Student"} · {userEmail}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <ProfileDialog
+                userName={userName}
+                userEmail={userEmail}
+                userImage={userImage}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <User className="h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                }
+              />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <div className="relative h-4 w-4">

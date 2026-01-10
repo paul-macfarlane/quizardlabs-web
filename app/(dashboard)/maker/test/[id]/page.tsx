@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/auth";
+import { DeleteTestButton } from "@/lib/components/delete-test-button";
 import { QuestionCard } from "@/lib/components/question-card";
 import { QuestionForm } from "@/lib/components/question-form";
 import { ShareTestDialog } from "@/lib/components/share-test-dialog";
@@ -144,7 +145,7 @@ export default async function TestEditorPage({ params }: TestEditorPageProps) {
               </p>
             )}
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2 w-full sm:w-auto flex-wrap">
             <ShareTestDialog testId={id} testName={test.name} />
             <TestForm
               test={test}
@@ -158,6 +159,7 @@ export default async function TestEditorPage({ params }: TestEditorPageProps) {
                 </Button>
               }
             />
+            <DeleteTestButton testId={id} testName={test.name} />
           </div>
         </div>
       </div>

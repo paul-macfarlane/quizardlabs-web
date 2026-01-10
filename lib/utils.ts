@@ -15,3 +15,9 @@ export function getGradeColorClass(score: number, maxScore: number): string {
   if (percentage >= 60) return "text-grade-d";
   return "text-destructive";
 }
+
+export function formatScore(score: number, maxScore: number): string {
+  if (maxScore === 0) return "0% (0/0)";
+  const percentage = Math.round((score / maxScore) * 100);
+  return `${percentage}% (${score}/${maxScore})`;
+}

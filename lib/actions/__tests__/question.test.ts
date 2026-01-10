@@ -56,6 +56,10 @@ const mockQuestion = {
   type: "multi_choice" as const,
   imageUrl: null,
   audioUrl: null,
+  freeTextMode: null,
+  expectedAnswer: null,
+  imageSignedUrl: null,
+  audioSignedUrl: null,
   createdAt: new Date(),
 };
 
@@ -65,6 +69,7 @@ const mockChoice = {
   orderIndex: "0",
   text: "Choice 1",
   audioUrl: null,
+  audioSignedUrl: null,
   isCorrect: true,
 };
 

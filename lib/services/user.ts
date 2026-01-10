@@ -1,7 +1,12 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/drizzle";
-import { userRole } from "@/lib/db/schema";
-import { type NewUserRole, type Role, type UserRole } from "@/lib/models/user";
+import { user, userRole } from "@/lib/db/schema";
+import {
+  type NewUserRole,
+  type Role,
+  type User,
+  type UserRole,
+} from "@/lib/models/user";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { headers } from "next/headers";
@@ -45,4 +50,24 @@ export async function getCurrentUser() {
   }
 
   return session.user;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; image?: string | null },
+): Promise<User> {
+  const [updated] = await db
+    .update(user)
+    .set({
+      name: data.name,
+      image: data.image,
+      updatedAt: new Date(),
+    })
+    .where(eq(user.id, userId))
+    .returning();
+  if (!updated) {
+    throw new Error("User not found");
+  }
+
+  return updated as User;
 }

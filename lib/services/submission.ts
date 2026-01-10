@@ -88,7 +88,18 @@ export async function getSubmissionsByUser(
     },
     orderBy: [desc(submission.startedAt)],
   });
-  return results as SubmissionWithTestInfo[];
+
+  const sorted = (results as SubmissionWithTestInfo[]).sort((a, b) => {
+    const aInProgress = a.submittedAt === null;
+    const bInProgress = b.submittedAt === null;
+
+    if (aInProgress && !bInProgress) return -1;
+    if (!aInProgress && bInProgress) return 1;
+
+    return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+  });
+
+  return sorted;
 }
 
 export async function getOrCreateSubmission(

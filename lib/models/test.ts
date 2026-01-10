@@ -7,13 +7,13 @@ export type NewTest = InferInsertModel<typeof test>;
 
 export const CreateTestSchema = z.object({
   name: z.string().min(1, "Test name is required").max(255),
-  description: z.string().optional(),
+  description: z.string().max(2000, "Description is too long").optional(),
 });
 
 export const UpdateTestSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Test name is required").max(255).optional(),
-  description: z.string().optional(),
+  description: z.string().max(2000, "Description is too long").optional(),
 });
 
 export const TestIdSchema = z.string().min(1, "Test ID is required");

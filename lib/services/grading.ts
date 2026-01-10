@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/drizzle";
-import { answer, submission } from "@/lib/db/schema";
+import { answer, submission, test, user } from "@/lib/db/schema";
 import type { Answer, Submission } from "@/lib/models/submission";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 
 export interface GradingResult {
   isCorrect: boolean;
@@ -145,30 +145,49 @@ export async function recalculateSubmissionScore(
 export async function getSubmissionsNeedingGrading(
   teacherId: string,
 ): Promise<SubmissionForGrading[]> {
-  const results = await db.query.submission.findMany({
-    where: and(
-      eq(submission.isFullyGraded, false),
-      eq(submission.submittedAt, submission.submittedAt),
-    ),
-    with: {
-      test: true,
-      user: true,
-      answers: true,
-    },
+  const results = await db
+    .select({
+      submission,
+      testName: test.name,
+      userName: user.name,
+    })
+    .from(submission)
+    .innerJoin(test, eq(submission.testId, test.id))
+    .innerJoin(user, eq(submission.userId, user.id))
+    .where(
+      and(
+        eq(submission.isFullyGraded, false),
+        isNotNull(submission.submittedAt),
+        eq(test.createdBy, teacherId),
+      ),
+    )
+    .orderBy(desc(submission.submittedAt));
+
+  const submissionIds = results.map((r) => r.submission.id);
+  if (submissionIds.length === 0) return [];
+
+  const answers = await db.query.answer.findMany({
+    where: (a, { inArray }) => inArray(a.submissionId, submissionIds),
   });
 
-  const teacherSubmissions = results.filter(
-    (s) => s.test.createdBy === teacherId && s.submittedAt !== null,
-  );
+  const ungradedCounts = new Map<string, number>();
+  for (const a of answers) {
+    if (a.isCorrect === null) {
+      ungradedCounts.set(
+        a.submissionId,
+        (ungradedCounts.get(a.submissionId) ?? 0) + 1,
+      );
+    }
+  }
 
-  return teacherSubmissions.map((s) => ({
-    id: s.id,
-    testId: s.testId,
-    testName: s.test.name,
-    userId: s.userId,
-    userName: s.user.name,
-    submittedAt: s.submittedAt!,
-    ungradedCount: s.answers.filter((a) => a.isCorrect === null).length,
+  return results.map((r) => ({
+    id: r.submission.id,
+    testId: r.submission.testId,
+    testName: r.testName,
+    userId: r.submission.userId,
+    userName: r.userName,
+    submittedAt: r.submission.submittedAt!,
+    ungradedCount: ungradedCounts.get(r.submission.id) ?? 0,
   }));
 }
 
@@ -256,4 +275,48 @@ export async function canUserGradeAnswer(
 
   if (!result) return false;
   return result.submission.test.createdBy === userId;
+}
+
+export interface GradedSubmission {
+  id: string;
+  testId: string;
+  testName: string;
+  userId: string;
+  userName: string;
+  submittedAt: Date;
+  score: number;
+  maxScore: number;
+}
+
+export async function getGradedSubmissions(
+  teacherId: string,
+): Promise<GradedSubmission[]> {
+  const results = await db
+    .select({
+      submission,
+      testName: test.name,
+      userName: user.name,
+    })
+    .from(submission)
+    .innerJoin(test, eq(submission.testId, test.id))
+    .innerJoin(user, eq(submission.userId, user.id))
+    .where(
+      and(
+        eq(submission.isFullyGraded, true),
+        isNotNull(submission.submittedAt),
+        eq(test.createdBy, teacherId),
+      ),
+    )
+    .orderBy(desc(submission.submittedAt));
+
+  return results.map((r) => ({
+    id: r.submission.id,
+    testId: r.submission.testId,
+    testName: r.testName,
+    userId: r.submission.userId,
+    userName: r.userName,
+    submittedAt: r.submission.submittedAt!,
+    score: r.submission.score ?? 0,
+    maxScore: r.submission.maxScore ?? 0,
+  }));
 }

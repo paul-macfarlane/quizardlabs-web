@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -26,9 +25,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { deleteTestAction } from "@/lib/actions/test";
 import { ShareTestDialog } from "@/lib/components/share-test-dialog";
-import { TestForm } from "@/lib/components/test-form";
 import { type Test } from "@/lib/models/test";
-import { FileText, MoreVertical, Pencil, Share2, Trash2 } from "lucide-react";
+import { MoreVertical, Share2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -59,72 +57,62 @@ export function TestCard({ test }: TestCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <Link href={`/maker/test/${test.id}`}>
-              <CardTitle className="hover:text-primary transition-colors cursor-pointer text-lg sm:text-xl truncate">
-                {test.name}
-              </CardTitle>
-            </Link>
-            {test.description && (
-              <CardDescription className="mt-2 line-clamp-2">
-                {test.description}
-              </CardDescription>
-            )}
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                disabled={deleting}
-              >
-                <MoreVertical className="w-4 h-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <ShareTestDialog
-                testId={test.id}
-                testName={test.name}
-                trigger={
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share
+    <>
+      <Link href={`/maker/test/${test.id}`} prefetch={true} className="block">
+        <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer h-full">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg sm:text-xl truncate">
+                  {test.name}
+                </CardTitle>
+                {test.description && (
+                  <CardDescription className="mt-2 line-clamp-2">
+                    {test.description}
+                  </CardDescription>
+                )}
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    disabled={deleting}
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <ShareTestDialog
+                    testId={test.id}
+                    testName={test.name}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowDeleteDialog(true);
+                    }}
+                    disabled={deleting}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
                   </DropdownMenuItem>
-                }
-              />
-              <TestForm
-                test={test}
-                trigger={
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Pencil className="w-4 h-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                }
-              />
-              <DropdownMenuItem
-                onClick={() => setShowDeleteDialog(true)}
-                disabled={deleting}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Link href={`/maker/test/${test.id}`}>
-          <Button variant="outline" className="w-full" size="sm">
-            <FileText className="w-4 h-4 mr-2" />
-            Edit Test
-          </Button>
-        </Link>
-      </CardContent>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </CardHeader>
+        </Card>
+      </Link>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
@@ -132,8 +120,8 @@ export function TestCard({ test }: TestCardProps) {
             <AlertDialogTitle>Delete test?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete{" "}
-              <span className="font-semibold">{test.name}</span> and all its
-              questions.
+              <span className="font-semibold">{test.name}</span> along with all
+              its questions and student submissions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -148,6 +136,6 @@ export function TestCard({ test }: TestCardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </>
   );
 }
